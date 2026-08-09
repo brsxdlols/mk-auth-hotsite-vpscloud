@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(config\.php|.*\.tmp-.*)$">
+  Require all denied
+</FilesMatch>
