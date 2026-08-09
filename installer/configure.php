@@ -5,13 +5,28 @@ if (PHP_SAPI !== 'cli' || function_exists('posix_geteuid') && posix_geteuid() !=
 }
 $source = '/opt/mk-auth/include/conexao.php';
 if (!is_file($source)) { fwrite(STDERR, "Configuração do MK-Auth não encontrada.\n"); exit(1); }
-require $source;
-if (!isset($LOADMYSQL) || $LOADMYSQL->connect_errno) { fwrite(STDERR, "Banco do MK-Auth indisponível.\n"); exit(1); }
+$sourceText=(string)file_get_contents($source);
+function configValue(string $source,string $name): string {
+    $pattern='/define\(\s*[\'\"]'.preg_quote($name,'/').'[\'\"]\s*,\s*[\'\"]([^\'\"]*)[\'\"]\s*\)/';
+    if(!preg_match($pattern,$source,$match)) throw new RuntimeException('Configuração '.$name.' não encontrada.');
+    return $match[1];
+}
+try {
+    $host=configValue($sourceText,'CONHOSTNAME'); $user=configValue($sourceText,'CONUSERNAME');
+    $password=configValue($sourceText,'CONPASSWRD'); $database=configValue($sourceText,'CONDATABASE');
+    $LOADMYSQL=mysqli_init(); $LOADMYSQL->options(MYSQLI_OPT_CONNECT_TIMEOUT,5);
+    if(!$LOADMYSQL->real_connect($host,$user,$password,$database)) throw new RuntimeException('Banco do MK-Auth indisponível.');
+    $LOADMYSQL->set_charset('utf8');
+} catch(Throwable $e) { fwrite(STDERR,$e->getMessage()."\n"); exit(1); }
 function rows(mysqli $db, string $sql): array {
     $result=$db->query($sql); if(!$result) throw new RuntimeException($db->error);
     $items=[]; while($row=$result->fetch_assoc()) $items[]=$row; return $items;
 }
 try {
+    if (in_array('--read-theme',$argv,true)) {
+        $current=rows($LOADMYSQL,"SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
+        echo ($current[0]['valor']??'')."\n"; $LOADMYSQL->close(); exit(0);
+    }
     $providers=rows($LOADMYSQL,'SELECT nome,razao,endereco,numero,bairro,cidade,estado,cep,fone,celular,whatsapp,email,site,facebook,instagram,youtube,tiktok,linkedin FROM sis_provedor LIMIT 1');
     $plans=rows($LOADMYSQL,"SELECT nome,valor,veldown,maxdown,velup,descricao,oculto FROM sis_plano WHERE COALESCE(oculto,'nao') <> 'sim' ORDER BY CAST(REPLACE(REPLACE(veldown,'M',''),'K','') AS UNSIGNED),nome LIMIT 24");
     $payload=['ok'=>true,'updated_at'=>gmdate('c'),'provider'=>$providers[0]??new stdClass(),'plans'=>$plans];
