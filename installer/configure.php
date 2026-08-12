@@ -39,8 +39,7 @@ try {
         if (($current[0]['valor']??'')!=='vpscloud') {
             $LOADMYSQL->query('SET SESSION lock_wait_timeout=15');
             $LOADMYSQL->query('SET SESSION innodb_lock_wait_timeout=15');
-            if(!$LOADMYSQL->query("UPDATE sis_opcao SET valor='vpscloud' WHERE nome='layhotsite'")) throw new RuntimeException('Falha ao selecionar o tema.');
-            if($LOADMYSQL->affected_rows===0&&!$LOADMYSQL->query("INSERT INTO sis_opcao (nome,valor) SELECT 'layhotsite','vpscloud' WHERE NOT EXISTS (SELECT 1 FROM sis_opcao WHERE nome='layhotsite')")) throw new RuntimeException('Falha ao registrar o tema.');
+            if(!$LOADMYSQL->query("INSERT INTO sis_opcao (nome,valor) VALUES ('layhotsite','vpscloud') ON DUPLICATE KEY UPDATE valor=VALUES(valor)")) throw new RuntimeException('Falha ao registrar o tema: '.$LOADMYSQL->error);
         }
     }
     $LOADMYSQL->close();
