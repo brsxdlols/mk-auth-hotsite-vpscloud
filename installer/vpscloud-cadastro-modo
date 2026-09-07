@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+MODE=${1:-}
+CONFIG=/var/www/vpscloud-config.php
+if [ "$MODE" != "whatsapp" ] && [ "$MODE" != "sistema" ]; then
+  echo "Uso: vpscloud-cadastro-modo whatsapp|sistema" >&2
+  exit 2
+fi
+cat > "$CONFIG" <<PHP
+<?php
+return ['cadastro_modo' => '$MODE'];
+PHP
+chmod 0644 "$CONFIG"
+echo "Modo de cadastro VPS CLOUD: $MODE"

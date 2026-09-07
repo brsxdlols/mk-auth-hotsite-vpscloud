@@ -1,6 +1,6 @@
 # Hotsite VPS CLOUD para MK-Auth
 
-Tema responsivo e reutilizável para o hotsite público do MK-Auth. Preserva os temas existentes, usa `/mkfiles/logo.jpg` e sincroniza automaticamente provedor e planos do banco local.
+Tema moderno, responsivo e reutilizável para o hotsite público do MK-Auth.
 
 ## Instalação
 
@@ -10,14 +10,20 @@ Execute como `root`:
 curl -fsSL https://raw.githubusercontent.com/brsxdlols/mk-auth-hotsite-vpscloud/main/install.sh | sh
 ```
 
-O instalador cria backup em `/opt/mk-auth/backups/vpscloud-hotsite`, instala os diretórios `layout/vpscloud`, `midias_vpscloud` e `vpscloud-api`, configura a sincronização local e seleciona `layhotsite=vpscloud`.
+O instalador cria backup em `/opt/mk-auth/backups/vpscloud-hotsite`, preserva os demais temas, instala os arquivos dinâmicos e seleciona `vpscloud` como tema principal. Reinstalações preservam o modo de cadastro escolhido.
 
-É idempotente: uma reinstalação preserva a configuração local e cria um novo backup antes de atualizar os arquivos.
+## Modo de cadastro
 
-## Segurança e portabilidade
+```sh
+vpscloud-cadastro-modo whatsapp
+vpscloud-cadastro-modo sistema
+```
 
-- Não contém IP, domínio de teste, SSH ou senha do banco do MK-Auth.
-- Lê a conexão da instalação local em `/opt/mk-auth/include/conexao.php`.
-- O sincronizador usa a conexão oficial do MK-Auth somente pelo PHP CLI local.
-- Publica apenas nome, contatos, redes e planos em um cache JSON sem credenciais.
-- Atualiza os dados automaticamente a cada cinco minutos.
+O modo sistema registra uma solicitação aberta em `sis_solic`; ele não cria nem ativa automaticamente um cliente.
+
+## Portabilidade
+
+- Logo relativa em `/mkfiles/logo.jpg`.
+- Nome, contatos e planos lidos do banco local do MK-Auth.
+- Sem IP, domínio, senha SSH ou credenciais fixas.
+- Layout responsivo para desktop e mobile.
