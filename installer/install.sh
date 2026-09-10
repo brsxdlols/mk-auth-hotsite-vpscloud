@@ -13,7 +13,7 @@ for candidate in "${VPSCLOUD_PHP:-php}" /opt/php8/bin/php /usr/bin/php7.3; do
   if "$candidate" -r 'exit(PHP_VERSION_ID >= 70300 && extension_loaded("mysqli") ? 0 : 1);' >/dev/null 2>&1; then PHP_BIN=$candidate; break; fi
 done
 [ -n "$PHP_BIN" ] || { echo 'É necessário PHP 7.3+ com mysqli.' >&2; exit 1; }
-ROOT_FILES='vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
+ROOT_FILES='planos.php vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
 for file in $ROOT_FILES; do
   [ -s "$ROOT_DIR/theme/root/$file" ] || { echo "Pacote incompleto: $file" >&2; exit 1; }
   "$PHP_BIN" -l "$ROOT_DIR/theme/root/$file" >/dev/null
