@@ -20,7 +20,7 @@ const plansRail=q('#plans'),planControls=q('.plan-controls'),previousPlan=q('.sl
 let selectedPlan=0;
 function updatePlanNav(){
  if(!plansRail||!planControls)return;
- const cards=qa('.plan',plansRail),count=cards.length;planControls.hidden=count<2;if(!count)return;
+ const cards=qa('.plan',plansRail),count=cards.length;planControls.hidden=count<2;const hint=q('.mobile-plan-hint');if(hint)hint.hidden=count<2;if(!count)return;
  selectedPlan=(selectedPlan+count)%count;
  cards.forEach((card,index)=>{const offset=(index-selectedPlan+count)%count,position=offset===0?'current':offset===1?'right':offset===count-1?'left':'hidden';card.dataset.position=position;card.inert=position==='hidden';card.setAttribute('aria-hidden',position==='hidden'?'true':'false')});
  planRange.textContent='Plano '+(selectedPlan+1)+' de '+count;
