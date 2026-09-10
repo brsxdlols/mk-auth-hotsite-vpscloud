@@ -29,11 +29,12 @@ $rateFile = sys_get_temp_dir() . '/vpscloud-signup-' . hash('sha256', $ip) . '.t
 $last = is_file($rateFile) ? (int)file_get_contents($rateFile) : 0;
 if ($last && time() - $last < 30) fail_signup('Aguarde alguns segundos antes de enviar novamente.', 429);
 
-require '/opt/mk-auth/include/conexao.php';
+require __DIR__.'/vpscloud-db.php';
+$LOADMYSQL = vpscloud_db();
 $dryRun = PHP_SAPI === 'cli' && getenv('VPSCLOUD_SIGNUP_DRY_RUN') === '1';
 if ($dryRun) $LOADMYSQL->begin_transaction();
 $plan = $get('plano');
-$stmt = $LOADMYSQL->prepare("SELECT nome FROM sis_plano WHERE nome=? AND COALESCE(oculto,'nao') <> 'sim' LIMIT 1");
+$stmt = $LOADMYSQL->prepare("SELECT nome FROM sis_plano WHERE nome=? AND ".vpscloud_visibility(vpscloud_columns($LOADMYSQL, 'sis_plano'))." LIMIT 1");
 $stmt->bind_param('s', $plan); $stmt->execute();
 if (!$stmt->get_result()->fetch_assoc()) fail_signup('O plano selecionado não está disponível.');
 $login = $get('login', 64);
