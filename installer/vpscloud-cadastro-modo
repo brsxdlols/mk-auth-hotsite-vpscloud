@@ -1,11 +1,10 @@
 #!/bin/sh
 set -eu
-MODE=${1:-}
-CONFIG=${VPSCLOUD_WEBROOT:-/var/www}/vpscloud-config.php
-if [ "$MODE" != whatsapp ] && [ "$MODE" != sistema ]; then
-  echo 'Uso: vpscloud-cadastro-modo whatsapp|sistema' >&2
-  exit 2
-fi
-printf "<?php\nreturn ['cadastro_modo' => '%s'];\n" "$MODE" > "$CONFIG"
-chmod 0644 "$CONFIG"
-echo "Modo de cadastro VPS CLOUD: $MODE"
+[ "$(id -u)" -eq 0 ] || { echo 'Execute como root.' >&2; exit 1; }
+for candidate in "${VPSCLOUD_PHP:-php}" /opt/php8/bin/php /usr/bin/php7.3; do
+  if "$candidate" -r 'exit(PHP_VERSION_ID >= 70300 && extension_loaded("mysqli") ? 0 : 1);' >/dev/null 2>&1; then
+    exec "$candidate" "${VPSCLOUD_WEBROOT:-/var/www}/vpscloud-layout.php" "${1:-}" "${VPSCLOUD_WEBROOT:-/var/www}"
+  fi
+done
+echo 'É necessário PHP 7.3+ com mysqli.' >&2
+exit 1

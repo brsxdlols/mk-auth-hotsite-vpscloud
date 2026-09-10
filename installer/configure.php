@@ -1,6 +1,7 @@
 <?php
 if (PHP_SAPI !== 'cli' || (function_exists('posix_geteuid') && posix_geteuid() !== 0)) { fwrite(STDERR, "Execute como root.\n"); exit(1); }
 require __DIR__.'/../theme/root/vpscloud-db.php';
+require __DIR__.'/../theme/root/vpscloud-layout.php';
 try {
     $db = vpscloud_db();
     if (in_array('--check', $argv, true)) {
@@ -11,7 +12,8 @@ try {
     if (!$result) throw new RuntimeException('Configuração de tema incompatível.');
     $row = $result->fetch_assoc();
     if (in_array('--read-theme', $argv, true)) { echo json_encode($row); exit(0); }
-    $theme = 'vpscloud';
+    if (in_array('--theme-name', $argv, true)) { echo vpscloud_selected_layout($db); exit(0); }
+    $theme = vpscloud_install_layout($row['valor'] ?? '');
     if (in_array('--restore-theme', $argv, true)) {
         $previous = json_decode(file_get_contents($argv[count($argv)-1]), true);
         if (!$previous) {
