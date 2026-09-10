@@ -24,7 +24,37 @@ function updatePlanNav(){
  cards.forEach((card,index)=>{const offset=(index-selectedPlan+count)%count,position=offset===0?'current':offset===1?'right':offset===count-1?'left':'hidden';card.dataset.position=position;card.inert=position==='hidden';card.setAttribute('aria-hidden',position==='hidden'?'true':'false')});
  planRange.textContent='Plano '+(selectedPlan+1)+' de '+count;
 }
-function movePlans(direction){selectedPlan+=direction;updatePlanNav()}
+let planAnimating=false,pendingPlanMoves=0;
+async function movePlans(direction){
+ if(planAnimating){pendingPlanMoves+=direction;return}
+ const cards=qa('.plan',plansRail);
+ if(cards.length<2)return;
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const before=new Map(cards.filter(card=>card.getClientRects().length).map(card=>[card,card.getBoundingClientRect()]));
+ selectedPlan+=direction;updatePlanNav();
+ if(reduced)return;
+ planAnimating=true;
+ const railRect=plansRail.getBoundingClientRect(),animations=[],ghosts=[];
+ const visible=cards.filter(card=>card.getClientRects().length);
+ const step=matchMedia('(max-width:820px)').matches?railRect.width:(railRect.width+18)/3;
+ visible.forEach(card=>{
+  const end=card.getBoundingClientRect(),old=before.get(card),transform=getComputedStyle(card).transform;
+  const dx=old?old.left+old.width/2-end.left-end.width/2:direction*step;
+  const dy=old?old.top+old.height/2-end.top-end.height/2:0;
+  const ratio=old?old.width/end.width:1;
+  animations.push(card.animate([{transform:'translate('+dx+'px,'+dy+'px) scale('+ratio+') '+transform,opacity:old?1:0},{transform,opacity:1}],{duration:460,easing:'cubic-bezier(.22,.7,.2,1)'}));
+ });
+ before.forEach((rect,card)=>{
+  if(visible.includes(card))return;
+  const ghost=card.cloneNode(true);ghost.classList.add('plan-ghost');ghost.inert=true;ghost.setAttribute('aria-hidden','true');
+  Object.assign(ghost.style,{position:'absolute',display:'flex',left:(rect.left-railRect.left)+'px',top:(rect.top-railRect.top)+'px',width:rect.width+'px',height:rect.height+'px',transform:'none',margin:'0',pointerEvents:'none'});
+  plansRail.appendChild(ghost);ghosts.push(ghost);
+  animations.push(ghost.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+(-direction*step)+'px)',opacity:0}],{duration:460,easing:'cubic-bezier(.22,.7,.2,1)',fill:'forwards'}));
+ });
+ await Promise.allSettled(animations.map(animation=>animation.finished));
+ ghosts.forEach(ghost=>ghost.remove());planAnimating=false;
+ if(pendingPlanMoves){const next=Math.sign(pendingPlanMoves);pendingPlanMoves-=next;movePlans(next)}
+}
 nextPlan.onclick=()=>movePlans(1);previousPlan.onclick=()=>movePlans(-1);
 plansRail.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();movePlans(e.key==='ArrowRight'?1:-1)}});
 let touchStart=null;
