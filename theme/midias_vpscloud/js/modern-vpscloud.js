@@ -14,30 +14,22 @@ function planVisual(name){
   const label=labels[type];
   return `<div class="plan-visual ${type}"><div class="plan-heading"><small>${label[0]}</small><b>${label[1]}</b><span class="plan-caption">${label[2]}</span></div><svg class="plan-art" viewBox="0 0 192 144" aria-hidden="true" focusable="false">${art[type]}</svg></div>`;
 }
-function renderPlans(plans){const box=q('#plans');if(!plans.length){box.innerHTML='<div class="loading">Consulte nossos planos pelo atendimento.</div>';return}box.innerHTML=plans.map((p,i)=>{const lines=(p.descricao||'Internet estável\nAtendimento próximo').split(/\r?\n/).filter(Boolean).slice(0,4);const price=Number(String(p.valor).replace(',','.')).toLocaleString('pt-BR',{minimumFractionDigits:2});return `<article class="plan">${planVisual(p.nome,i)}<div class="plan-body"><h3 title="${esc(p.nome)}">${esc(p.nome)}</h3><div class="price"><small>R$</small><b>${price}</b><small>/mês</small></div><ul>${lines.map(x=>`<li>${esc(x.replace(/^[-•]\s*/,''))}</li>`).join('')}</ul><a class="btn primary" href="${cadastroRoute}?plano=${encodeURIComponent(p.nome)}">Selecionar plano</a></div></article>`}).join('')}
+function renderPlans(plans){const box=q('#plans');if(!plans.length){box.innerHTML='<div class="loading">Consulte nossos planos pelo atendimento.</div>';return}box.innerHTML=plans.map((p,i)=>{const lines=(p.descricao||'Internet estável\nAtendimento próximo').split(/\r?\n/).filter(Boolean).slice(0,4);const price=Number(String(p.valor).replace(',','.')).toLocaleString('pt-BR',{minimumFractionDigits:2});return `<article class="plan">${planVisual(p.nome,i)}<div class="plan-body"><h3 title="${esc(p.nome)}">${esc(p.nome)}</h3><div class="price"><small>R$</small><b>${price}</b><small>/mês</small></div><ul>${lines.map(x=>`<li>${esc(x.replace(/^[-•]\s*/,''))}</li>`).join('')}</ul><a class="btn primary" href="${cadastroRoute}?plano=${encodeURIComponent(p.nome)}">Selecionar plano</a></div></article>`}).join('');if(q('#all-plans'))q('#all-plans').innerHTML=box.innerHTML}
 function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const plansRail=q('#plans'),planControls=q('.plan-controls'),previousPlan=q('.slider-arrow.prev'),nextPlan=q('.slider-arrow.next'),planRange=q('#plan-range');
-function updatePlanNav(){if(!planControls)return;
-  const cards=qa('.plan',plansRail),max=Math.max(0,plansRail.scrollWidth-plansRail.clientWidth);
-  planControls.hidden=!cards.length||max<3;
-  previousPlan.disabled=plansRail.scrollLeft<3;
-  nextPlan.disabled=plansRail.scrollLeft>=max-3;
-  if(!cards.length)return;
-  const step=cards[0].getBoundingClientRect().width+parseFloat(getComputedStyle(plansRail).columnGap||0);
-  const visible=Math.max(1,Math.round(plansRail.clientWidth/step)),first=Math.round(plansRail.scrollLeft/step)+1,last=Math.min(cards.length,first+visible-1);
-  const label=first===last?`Plano ${first} de ${cards.length}`:`Planos ${first}–${last} de ${cards.length}`;
-  if(planRange.textContent!==label)planRange.textContent=label;
+let selectedPlan=0;
+function updatePlanNav(){
+ const cards=qa('.plan',plansRail),count=cards.length;planControls.hidden=count<2;if(!count)return;
+ selectedPlan=(selectedPlan+count)%count;
+ cards.forEach((card,index)=>{const offset=(index-selectedPlan+count)%count,position=offset===0?'current':offset===1?'right':offset===count-1?'left':'hidden';card.dataset.position=position;card.inert=position==='hidden';card.setAttribute('aria-hidden',position==='hidden'?'true':'false')});
+ planRange.textContent='Plano '+(selectedPlan+1)+' de '+count;
 }
-function movePlans(direction){
-  const card=q('.plan',plansRail);if(!card)return;
-  const step=card.getBoundingClientRect().width+parseFloat(getComputedStyle(plansRail).columnGap||0);
-  const visible=Math.max(1,Math.round(plansRail.clientWidth/step));
-  plansRail.scrollBy({left:direction*step*visible,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
-}
+function movePlans(direction){selectedPlan+=direction;updatePlanNav()}
 nextPlan.onclick=()=>movePlans(1);previousPlan.onclick=()=>movePlans(-1);
-plansRail.addEventListener('scroll',updatePlanNav,{passive:true});
-plansRail.addEventListener('keydown',e=>{if(e.target===plansRail&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();movePlans(e.key==='ArrowRight'?1:-1)}});
-new ResizeObserver(updatePlanNav).observe(plansRail);
+plansRail.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();movePlans(e.key==='ArrowRight'?1:-1)}});
+let touchStart=null;
+plansRail.addEventListener('touchstart',e=>{touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
+plansRail.addEventListener('touchend',e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy))movePlans(dx<0?1:-1);touchStart=null},{passive:true});
 q('#contact-form').addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),parts=[`Olá! Meu nome é ${f.get('nome')}.`,`Assunto: ${f.get('assunto')}.`,`Telefone: ${f.get('telefone')}.`,f.get('email')?`E-mail: ${f.get('email')}.`:'',f.get('bairro')?`Bairro/localidade: ${f.get('bairro')}.`:'',f.get('endereco')?`Endereço: ${f.get('endereco')}.`:'',f.get('mensagem')?`Mensagem: ${f.get('mensagem')}`:''].filter(Boolean);if(whatsappNumber)window.open('https://wa.me/55'+whatsappNumber+'?text='+encodeURIComponent(parts.join('\n')),'_blank');else location.href='mailto:?subject='+encodeURIComponent(f.get('assunto'))+'&body='+encodeURIComponent(parts.join('\n'))});
 const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in-view');observer.unobserve(entry.target)}}),{threshold:.15});qa('.reveal,.feature').forEach(el=>observer.observe(el));
 }());
