@@ -45,7 +45,7 @@ rollback() {
   if [ "$CHANGED" = 1 ]; then
     echo "Falha: restaurando backup $BACKUP" >&2
     cp -p "$BACKUP/admin-layout.hhvm" /opt/mk-auth/admin/hotsite_layout.hhvm
-    if [ -f "$BACKUP/admin-htaccess" ]; then cp -p "$BACKUP/admin-htaccess" /opt/mk-auth/admin/.htaccess; fi
+    if [ -f "$BACKUP/admin-htaccess" ]; then cp -p "$BACKUP/admin-htaccess" /opt/mk-auth/admin/.htaccess; else rm -f /opt/mk-auth/admin/.htaccess; fi
     if [ -d "$BACKUP/legacy-layouts" ]; then cp -a "$BACKUP/legacy-layouts/." "$WEBROOT/layout/"; fi
     for target in $TARGETS; do rm -rf -- "$WEBROOT/$target"; done
     tar -C "$WEBROOT" -xzf "$BACKUP/files.tar.gz"
@@ -67,7 +67,7 @@ done
 CHECK_URL=${VPSCLOUD_CHECK_URL:-http://127.0.0.1}
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=1" -o "$BACKUP/http-check.json"
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/http-check.json"
-install -d -m 0755 "$WEBROOT/layout/vpscloud" "$WEBROOT/midias_vpscloud"
+install -d -m 0755 "$WEBROOT/layout" "$WEBROOT/layout/vpscloud" "$WEBROOT/midias_vpscloud"
 cp -a "$ROOT_DIR/theme/layout/vpscloud/." "$WEBROOT/layout/vpscloud/"
 for layout in $LAYOUTS; do
   install -d -m 0755 "$WEBROOT/layout/$layout"
@@ -86,9 +86,20 @@ curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-d
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
 "$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -o "$BACKUP/home-check.html"
-curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/admin/hotsite_layout.hhvm" -D "$BACKUP/admin-headers.txt" -o "$BACKUP/admin-check.html"
-[ -s "$BACKUP/admin-check.html" ] || { echo 'A tela nativa de layout retornou vazia.' >&2; exit 1; }
-grep -qi '^X-VPSCloud-Layout: enabled' "$BACKUP/admin-headers.txt" || { echo 'A integração de layout não carregou.' >&2; exit 1; }
+grep -q 'modern-vpscloud' "$BACKUP/home-check.html" || { echo 'O hotsite instalado não foi encontrado na resposta HTTP.' >&2; exit 1; }
+# The optional admin hook must never roll back a healthy public hotsite.
+if ! sh "$ROOT_DIR/installer/verify-admin.sh" "$CHECK_URL" "$BACKUP"; then
+  echo 'Aviso: as opções extras de imagens não carregaram neste ambiente PHP.' >&2
+  if [ -f "$BACKUP/admin-htaccess" ]; then
+    cp -p "$BACKUP/admin-htaccess" /opt/mk-auth/admin/.htaccess
+  else
+    rm -f /opt/mk-auth/admin/.htaccess
+  fi
+  echo 'Configuração administrativa anterior restaurada; hotsite e dois layouts mantidos.' >&2
+  if ! curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/admin/hotsite_layout.hhvm" -o "$BACKUP/admin-restored.html" || [ ! -s "$BACKUP/admin-restored.html" ]; then
+    echo 'A página administrativa também falhou com a configuração anterior. Verifique o serviço PHP administrativo.' >&2
+  fi
+fi
 echo "Layout selecionado: $SELECTED"
 CHANGED=0
 echo "Backup: $BACKUP"
