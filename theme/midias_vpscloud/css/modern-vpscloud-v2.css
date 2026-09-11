@@ -87,3 +87,17 @@ body{background:#eef6fd}.quick{background:linear-gradient(180deg,#fff 0%,#edf6ff
  .plan-controls .prev{left:0}.plan-controls .next{right:0}
  .plans-summary{gap:14px}.plans-summary>.btn{min-height:48px}
 }
+
+/* Perspective wheel: cards keep their dimensions throughout each turn. */
+#plans.plans{display:grid;grid-template-columns:minmax(0,1fr);padding:12px 0 22px;overflow:hidden;align-items:stretch;isolation:isolate}
+#plans.plans>.plan{display:flex;grid-area:1/1;width:32%;max-width:350px;justify-self:center;min-width:0;transform-origin:center;backface-visibility:hidden;transition:box-shadow .25s ease;pointer-events:auto}
+#plans.plans>.plan[data-position="hidden"]{visibility:hidden;pointer-events:none}
+#plans.plans>.plan:hover{translate:none;box-shadow:0 22px 42px #0006}
+@media(max-width:820px){
+ #plans.plans{padding:8px 0 16px}
+ #plans.plans>.plan{width:72%;max-width:310px}
+ #plans.plans .plan-body{padding:18px}
+ #plans.plans .plan-visual{height:140px}
+ #plans.plans .price b{font-size:34px}
+ .plans-shell .plan-controls .slider-arrow{width:40px;height:40px}
+}

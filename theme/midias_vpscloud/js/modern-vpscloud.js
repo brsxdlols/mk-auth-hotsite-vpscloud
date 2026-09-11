@@ -17,45 +17,42 @@ function planVisual(name){
 function renderPlans(plans){const box=q('#plans')||q('#all-plans');if(!plans.length){box.innerHTML='<div class="loading">Consulte nossos planos pelo atendimento.</div>';return}box.innerHTML=plans.map((p,i)=>{const lines=(p.descricao||'Internet estável\nAtendimento próximo').split(/\r?\n/).filter(Boolean).slice(0,4);const price=Number(String(p.valor).replace(',','.')).toLocaleString('pt-BR',{minimumFractionDigits:2});return `<article class="plan">${planVisual(p.nome,i)}<div class="plan-body"><h3 title="${esc(p.nome)}">${esc(p.nome)}</h3><div class="price"><small>R$</small><b>${price}</b><small>/mês</small></div><ul>${lines.map(x=>`<li>${esc(x.replace(/^[-•]\s*/,''))}</li>`).join('')}</ul><a class="btn primary" href="${cadastroRoute}?plano=${encodeURIComponent(p.nome)}">Selecionar plano</a></div></article>`}).join('');if(q('#all-plans'))q('#all-plans').innerHTML=box.innerHTML}
 function esc(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 const plansRail=q('#plans'),planControls=q('.plan-controls'),previousPlan=q('.slider-arrow.prev'),nextPlan=q('.slider-arrow.next'),planRange=q('#plan-range');
-let selectedPlan=0;
+let selectedPlan=0,planAnimating=false,pendingPlanMoves=0;
+function planOffset(index,selected,count){let offset=(index-selected+count)%count;if(offset>count/2)offset-=count;return Math.max(-2,Math.min(2,offset))}
+function planPose(offset){
+ const mobile=matchMedia('(max-width:820px)').matches;
+ return {transform:'perspective(1100px) translateX('+(offset*(mobile?78:94))+'%) translateZ('+(-Math.abs(offset)*100)+'px) rotateY('+(-offset*26)+'deg) scale('+(offset===0?.94:.82)+')',opacity:Math.abs(offset)>1?0:offset===0?1:.78};
+}
 function updatePlanNav(){
  if(!plansRail||!planControls)return;
  const cards=qa('.plan',plansRail),count=cards.length;planControls.hidden=count<2;const hint=q('.mobile-plan-hint');if(hint)hint.hidden=count<2;if(!count)return;
  selectedPlan=(selectedPlan+count)%count;
- cards.forEach((card,index)=>{const offset=(index-selectedPlan+count)%count,position=offset===0?'current':offset===1?'right':offset===count-1?'left':'hidden';card.dataset.position=position;card.inert=position==='hidden';card.setAttribute('aria-hidden',position==='hidden'?'true':'false')});
+ cards.forEach((card,index)=>{
+  const offset=planOffset(index,selectedPlan,count),visible=Math.abs(offset)<=1;
+  card.dataset.position=offset===0?'current':offset===-1?'left':offset===1?'right':'hidden';
+  Object.assign(card.style,planPose(offset),{visibility:visible?'visible':'hidden',zIndex:offset===0?'3':'1'});
+  card.inert=!visible;card.setAttribute('aria-hidden',visible?'false':'true');
+ });
  planRange.textContent='Plano '+(selectedPlan+1)+' de '+count;
 }
-let planAnimating=false,pendingPlanMoves=0;
 async function movePlans(direction){
- if(planAnimating){pendingPlanMoves+=direction;return}
- const cards=qa('.plan',plansRail);
- if(cards.length<2)return;
- const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- const before=new Map(cards.filter(card=>card.getClientRects().length).map(card=>[card,card.getBoundingClientRect()]));
- selectedPlan+=direction;updatePlanNav();
- if(reduced)return;
- planAnimating=true;
- const railRect=plansRail.getBoundingClientRect(),animations=[],ghosts=[];
- const visible=cards.filter(card=>card.getClientRects().length);
- const step=matchMedia('(max-width:820px)').matches?railRect.width:(railRect.width+18)/3;
- visible.forEach(card=>{
-  const end=card.getBoundingClientRect(),old=before.get(card),transform=getComputedStyle(card).transform;
-  const dx=old?old.left+old.width/2-end.left-end.width/2:direction*step;
-  const dy=old?old.top+old.height/2-end.top-end.height/2:0;
-  const ratio=old?old.width/end.width:1;
-  animations.push(card.animate([{transform:'translate('+dx+'px,'+dy+'px) scale('+ratio+') '+transform,opacity:old?1:0},{transform,opacity:1}],{duration:460,easing:'cubic-bezier(.22,.7,.2,1)'}));
+ if(planAnimating){pendingPlanMoves=direction;return}
+ const cards=qa('.plan',plansRail),count=cards.length;if(count<2)return;
+ const oldSelected=selectedPlan,newSelected=(selectedPlan+direction+count)%count;
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches){selectedPlan=newSelected;updatePlanNav();return}
+ planAnimating=true;const animations=[];
+ cards.forEach((card,index)=>{
+  let from=planOffset(index,oldSelected,count),to=planOffset(index,newSelected,count);
+  if(Math.abs(from)>1&&Math.abs(to)>1)return;
+  if(Math.abs(to-from)>1){if(Math.abs(to)<=1)from=to+direction;else to=from-direction}
+  card.style.visibility='visible';card.style.zIndex=to===0?'3':from===0?'2':'1';
+  animations.push(card.animate([planPose(from),planPose(to)],{duration:680,easing:'cubic-bezier(.22,.61,.36,1)',fill:'forwards'}));
  });
- before.forEach((rect,card)=>{
-  if(visible.includes(card))return;
-  const ghost=card.cloneNode(true);ghost.classList.add('plan-ghost');ghost.inert=true;ghost.setAttribute('aria-hidden','true');
-  Object.assign(ghost.style,{position:'absolute',display:'flex',left:(rect.left-railRect.left)+'px',top:(rect.top-railRect.top)+'px',width:rect.width+'px',height:rect.height+'px',transform:'none',margin:'0',pointerEvents:'none'});
-  plansRail.appendChild(ghost);ghosts.push(ghost);
-  animations.push(ghost.animate([{transform:'translateX(0)',opacity:1},{transform:'translateX('+(-direction*step)+'px)',opacity:0}],{duration:460,easing:'cubic-bezier(.22,.7,.2,1)',fill:'forwards'}));
- });
- await Promise.allSettled(animations.map(animation=>animation.finished));
- ghosts.forEach(ghost=>ghost.remove());planAnimating=false;
- if(pendingPlanMoves){const next=Math.sign(pendingPlanMoves);pendingPlanMoves-=next;movePlans(next)}
+ await Promise.allSettled(animations.map(a=>a.finished));
+ selectedPlan=newSelected;updatePlanNav();animations.forEach(a=>a.cancel());planAnimating=false;
+ if(pendingPlanMoves){const next=pendingPlanMoves;pendingPlanMoves=0;movePlans(next)}
 }
+window.addEventListener('resize',()=>{if(!planAnimating)updatePlanNav()});
 if(nextPlan)nextPlan.onclick=()=>movePlans(1);if(previousPlan)previousPlan.onclick=()=>movePlans(-1);
 plansRail?.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();movePlans(e.key==='ArrowRight'?1:-1)}});
 let touchStart=null;
