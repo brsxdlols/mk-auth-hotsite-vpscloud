@@ -166,9 +166,11 @@ body{background:#eef6fd}.quick{background:linear-gradient(180deg,#fff 0%,#edf6ff
 .phone-wing,.showcase-phone{transition:transform .45s cubic-bezier(.2,.8,.2,1),filter .45s,box-shadow .45s}
 .phone-dot{transition:transform .25s,background .25s;box-shadow:0 0 0 7px transparent}
 @media(hover:hover) and (pointer:fine){
- .phone-wing:hover{transform:translateY(-12px) rotate(0) scale(1.06);filter:brightness(1.15);box-shadow:0 26px 45px #08294e38;position:relative;z-index:3}
+ .phone-wing:hover{transform:translateY(-12px) rotate(0) scale(1.06);filter:brightness(1.15);box-shadow:0 26px 45px #08294e38;z-index:1}
  .showcase-phone:hover{transform:translateY(-10px) scale(1.035);box-shadow:0 32px 65px #102b4550}
  .phone-dot:hover{transform:scale(1.45);background:#087ff3}
 }
 @media(max-width:820px){.quick{padding:22px 0 6px}.quick-grid{border-radius:16px}.hero .hero-dots{bottom:18px}.hero-discover{bottom:78px}}
 @media(prefers-reduced-motion:reduce){.phone-wing,.showcase-phone,.phone-dot{transition:none}}
+
+.phone-gallery{isolation:isolate}.phone-gallery .showcase-phone{z-index:4}.phone-scene img[src*='feature-streaming.png']{object-position:left center}
