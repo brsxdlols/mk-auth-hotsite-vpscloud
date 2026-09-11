@@ -61,3 +61,22 @@ O diretório padrão é `/var/www`. `VPSCLOUD_WEBROOT` permite um subdiretório 
 - `php tests/layouts.php`: modo padrão, migração, precedência da seleção nativa e preservação da escolha em atualizações.
 
 Os testes usam tabelas temporárias restritas à conexão de teste, sem modificar tabelas persistentes.
+
+### Imagens dos planos em Hotsite > Layout
+
+O campo Tema oferece as combinações de cadastro (sistema ou whatsapp) e imagem.
+Exemplos: layout-vpscloud-sistema-internet, layout-vpscloud-whatsapp-cloud,
+layout-vpscloud-sistema-dinamico.
+
+Sufixos disponíveis: dinamico, internet, fibra, rural, combo, servicos, cloud,
+integracoes, suporte, licencas e regularizacao. Um sufixo fixo aplica a mesma
+categoria visual a todos os planos, sem alterar seus nomes, preços ou descrições.
+Dinamico interpreta o nome de cada plano. Os dois layouts antigos continuam
+dinâmicos; atualizações preservam a escolha. Novas instalações usam cadastro via sistema.
+
+No modo dinâmico, a prioridade é: regularização (CFT, CRT, Anatel, CREA, SCM,
+SICI, Mosaico, outorga, homologação); licenças; suporte; serviços; combo;
+cloud; integrações; rural; fibra; internet. Nomes não identificados usam Serviços.
+Exemplos: Suporte Cloud = Suporte; Licença MK-Auth = Licenças;
+Serviço Internet = Serviços; Combo Fibra = Combo; Fibra Cidade = Fibra.
+As ilustrações são genéricas e não representam certificação ou vínculo institucional.

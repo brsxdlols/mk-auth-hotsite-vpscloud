@@ -18,3 +18,15 @@ $rows=$db->query('SELECT COUNT(*) AS total FROM sis_opcao')->fetch_assoc();
 verify((int)$rows['total']===1,'alternar não duplica a opção');
 $failed=false;try {vpscloud_set_layout($db,'outro');}catch(RuntimeException $e){$failed=true;}
 verify($failed,'layout inválido rejeitado');
+
+foreach (vpscloud_layouts() as $theme => $mode) {
+    vpscloud_set_layout($db, $theme);
+    verify(vpscloud_layout_mode($db)===$mode, 'cadastro '.$theme);
+    verify(vpscloud_install_layout($theme)===$theme, 'preserva '.$theme);
+}
+vpscloud_set_layout($db,'layout-vpscloud-sistema-internet');
+verify(vpscloud_visual_mode($db)==='network','imagem fixa internet');
+vpscloud_set_layout($db,'layout-vpscloud-whatsapp-licencas');
+verify(vpscloud_visual_mode($db)==='license','imagem fixa licencas');
+vpscloud_set_layout($db,'layout-vpscloud-sistema-dinamico');
+verify(vpscloud_visual_mode($db)==='dynamic','imagens dinamicas');

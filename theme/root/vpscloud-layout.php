@@ -1,6 +1,21 @@
 <?php
+function vpscloud_visual_modes() {
+    return ['dinamico'=>'dynamic','internet'=>'network','fibra'=>'fiber','rural'=>'rural','combo'=>'combo','servicos'=>'service','cloud'=>'cloud','integracoes'=>'api','suporte'=>'support','licencas'=>'license','regularizacao'=>'regulatory'];
+}
 function vpscloud_layouts() {
-    return ['layout-vpscloud-whatsapp'=>'whatsapp', 'layout-vpscloud-sistema'=>'sistema'];
+    $layouts = ['layout-vpscloud-whatsapp'=>'whatsapp', 'layout-vpscloud-sistema'=>'sistema'];
+    foreach (['sistema','whatsapp'] as $mode) {
+        foreach (vpscloud_visual_modes() as $name => $visual) $layouts['layout-vpscloud-'.$mode.'-'.$name] = $mode;
+    }
+    return $layouts;
+}
+function vpscloud_visual_mode($db) {
+    $selected = vpscloud_selected_layout($db);
+    if (!isset(vpscloud_layouts()[$selected])) return 'dynamic';
+    foreach (vpscloud_visual_modes() as $name => $visual) {
+        if (substr($selected, -strlen('-'.$name)) === '-'.$name) return $visual;
+    }
+    return 'dynamic';
 }
 function vpscloud_selected_layout($db) {
     $result = $db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");

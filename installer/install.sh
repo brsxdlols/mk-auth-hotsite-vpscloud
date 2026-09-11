@@ -27,7 +27,9 @@ BACKUP=$(mktemp -d /opt/mk-auth/backups/vpscloud-hotsite/XXXXXXXX 2>/dev/null) |
 }
 chmod 0700 "$BACKUP"
 "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --read-theme > "$BACKUP/theme.json"
-TARGETS="index.html layout/vpscloud layout/layout-vpscloud-whatsapp layout/layout-vpscloud-sistema midias_vpscloud $ROOT_FILES"
+LAYOUTS=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --list-layouts)
+TARGETS="index.html layout/vpscloud midias_vpscloud $ROOT_FILES"
+for layout in $LAYOUTS; do TARGETS="$TARGETS layout/$layout"; done
 : > "$BACKUP/existing.txt"
 for target in $TARGETS; do
   if [ -e "$WEBROOT/$target" ] || [ -L "$WEBROOT/$target" ]; then echo "$target" >> "$BACKUP/existing.txt"; fi
@@ -62,7 +64,7 @@ curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-d
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/http-check.json"
 install -d -m 0755 "$WEBROOT/layout/vpscloud" "$WEBROOT/midias_vpscloud"
 cp -a "$ROOT_DIR/theme/layout/vpscloud/." "$WEBROOT/layout/vpscloud/"
-for layout in layout-vpscloud-whatsapp layout-vpscloud-sistema; do
+for layout in $LAYOUTS; do
   install -d -m 0755 "$WEBROOT/layout/$layout"
   cp -a "$ROOT_DIR/theme/layout/vpscloud/." "$WEBROOT/layout/$layout/"
 done
@@ -72,7 +74,7 @@ find "$WEBROOT/layout/vpscloud" "$WEBROOT/layout/layout-vpscloud-whatsapp" "$WEB
 install -m 0755 "$ROOT_DIR/installer/vpscloud-cadastro-modo" /usr/local/sbin/vpscloud-cadastro-modo
 "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme
 SELECTED=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --theme-name)
-case "$SELECTED" in layout-vpscloud-sistema) MODE=sistema;; layout-vpscloud-whatsapp) MODE=whatsapp;; *) echo 'Layout inválido.' >&2; exit 1;; esac
+case "$SELECTED" in layout-vpscloud-sistema|layout-vpscloud-sistema-*) MODE=sistema;; layout-vpscloud-whatsapp|layout-vpscloud-whatsapp-*) MODE=whatsapp;; *) echo 'Layout inválido.' >&2; exit 1;; esac
 ln -sfn "layout/$SELECTED/index.html" "$WEBROOT/index.html"
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=layout" -o "$BACKUP/layout-check.json"
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE"

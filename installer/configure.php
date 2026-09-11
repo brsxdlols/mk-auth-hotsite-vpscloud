@@ -3,6 +3,7 @@ if (PHP_SAPI !== 'cli' || (function_exists('posix_geteuid') && posix_geteuid() !
 require __DIR__.'/../theme/root/vpscloud-db.php';
 require __DIR__.'/../theme/root/vpscloud-layout.php';
 try {
+    if (in_array('--list-layouts', $argv, true)) { echo implode(' ', array_keys(vpscloud_layouts())); exit(0); }
     $db = vpscloud_db();
     if (in_array('--check', $argv, true)) {
         $data = vpscloud_data($db);

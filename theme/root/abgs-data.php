@@ -12,7 +12,7 @@ try {
         $loaded = require __DIR__.'/vpscloud-config.php';
         if (is_array($loaded)) $config = array_merge($config, $loaded);
     }
-    $data['config'] = ['cadastro_modo'=>vpscloud_layout_mode($db, $config['cadastro_modo'])];
+    $data['config'] = ['cadastro_modo'=>vpscloud_layout_mode($db, $config['cadastro_modo']), 'plan_visual_mode'=>vpscloud_visual_mode($db)];
     $data['ok'] = true;
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (Throwable $e) {
