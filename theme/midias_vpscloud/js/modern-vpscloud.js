@@ -55,9 +55,35 @@ async function movePlans(direction){
 window.addEventListener('resize',()=>{if(!planAnimating)updatePlanNav()});
 if(nextPlan)nextPlan.onclick=()=>movePlans(1);if(previousPlan)previousPlan.onclick=()=>movePlans(-1);
 plansRail?.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();movePlans(e.key==='ArrowRight'?1:-1)}});
-let touchStart=null;
-plansRail?.addEventListener('touchstart',e=>{touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY}},{passive:true});
-plansRail?.addEventListener('touchend',e=>{if(!touchStart)return;const dx=e.changedTouches[0].clientX-touchStart.x,dy=e.changedTouches[0].clientY-touchStart.y;if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy))movePlans(dx<0?1:-1);touchStart=null},{passive:true});
+let dragStart=null,suppressPlanClickUntil=0;
+plansRail?.addEventListener('click',e=>{
+ if(Date.now()<suppressPlanClickUntil){e.preventDefault();e.stopPropagation();return}
+ const card=e.target.closest('.plan');if(!card)return;
+ const position=card.dataset.position;
+ if(position==='left'||position==='right'){e.preventDefault();e.stopPropagation();movePlans(position==='right'?1:-1)}
+},true);
+plansRail?.addEventListener('pointerdown',e=>{
+ if(!e.isPrimary||e.button!==0)return;
+ dragStart={id:e.pointerId,x:e.clientX,y:e.clientY};
+});
+plansRail?.addEventListener('pointermove',e=>{
+ if(!dragStart||e.pointerId!==dragStart.id)return;
+ const dx=e.clientX-dragStart.x,dy=e.clientY-dragStart.y;
+ if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)){
+  suppressPlanClickUntil=Date.now()+500;
+  if(!plansRail.hasPointerCapture(e.pointerId))plansRail.setPointerCapture(e.pointerId);
+  plansRail.classList.add('is-dragging');
+ }
+});
+plansRail?.addEventListener('pointerup',e=>{
+ if(!dragStart||e.pointerId!==dragStart.id)return;
+ const dx=e.clientX-dragStart.x,dy=e.clientY-dragStart.y;
+ dragStart=null;plansRail.classList.remove('is-dragging');
+ if(plansRail.hasPointerCapture(e.pointerId))plansRail.releasePointerCapture(e.pointerId);
+ if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)){suppressPlanClickUntil=Date.now()+500;movePlans(dx<0?1:-1)}
+});
+plansRail?.addEventListener('pointercancel',()=>{dragStart=null;plansRail.classList.remove('is-dragging')});
+plansRail?.addEventListener('dragstart',e=>e.preventDefault());
 q('#contact-form')?.addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),parts=[`Olá! Meu nome é ${f.get('nome')}.`,`Assunto: ${f.get('assunto')}.`,`WhatsApp: ${f.get('whatsapp')}.`,f.get('email')?`E-mail: ${f.get('email')}.`:'',f.get('cidade')?`Cidade: ${f.get('cidade')}.`:'',f.get('bairro')?`Bairro/localidade: ${f.get('bairro')}.`:'',f.get('endereco')?`Endereço: ${f.get('endereco')}.`:'',f.get('mensagem')?`Mensagem: ${f.get('mensagem')}`:''].filter(Boolean);if(whatsappNumber)window.open('https://wa.me/55'+whatsappNumber+'?text='+encodeURIComponent(parts.join('\n')),'_blank');else location.href='mailto:?subject='+encodeURIComponent(f.get('assunto'))+'&body='+encodeURIComponent(parts.join('\n'))});
 const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in-view');observer.unobserve(entry.target)}}),{threshold:.15});qa('.reveal,.feature').forEach(el=>observer.observe(el));
 }());

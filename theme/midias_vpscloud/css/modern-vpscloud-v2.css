@@ -101,3 +101,5 @@ body{background:#eef6fd}.quick{background:linear-gradient(180deg,#fff 0%,#edf6ff
  #plans.plans .price b{font-size:34px}
  .plans-shell .plan-controls .slider-arrow{width:40px;height:40px}
 }
+
+#plans{touch-action:pan-y pinch-zoom;user-select:none}#plans .plan[data-position="left"],#plans .plan[data-position="right"]{cursor:pointer}#plans .plan[data-position="current"]{cursor:grab}#plans.is-dragging,#plans.is-dragging .plan{cursor:grabbing}
