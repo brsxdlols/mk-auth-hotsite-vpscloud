@@ -37,6 +37,7 @@ done
 tar -C "$WEBROOT" -czf "$BACKUP/files.tar.gz" -T "$BACKUP/existing.txt"
 if [ -e /usr/local/sbin/vpscloud-cadastro-modo ]; then cp -a /usr/local/sbin/vpscloud-cadastro-modo "$BACKUP/cadastro-modo"; fi
 cp -p /opt/mk-auth/admin/hotsite_layout.hhvm "$BACKUP/admin-layout.hhvm"
+if [ -f /opt/mk-auth/admin/.htaccess ]; then cp -p /opt/mk-auth/admin/.htaccess "$BACKUP/admin-htaccess"; fi
 CHANGED=0
 rollback() {
   code=$?
@@ -44,6 +45,7 @@ rollback() {
   if [ "$CHANGED" = 1 ]; then
     echo "Falha: restaurando backup $BACKUP" >&2
     cp -p "$BACKUP/admin-layout.hhvm" /opt/mk-auth/admin/hotsite_layout.hhvm
+    if [ -f "$BACKUP/admin-htaccess" ]; then cp -p "$BACKUP/admin-htaccess" /opt/mk-auth/admin/.htaccess; fi
     if [ -d "$BACKUP/legacy-layouts" ]; then cp -a "$BACKUP/legacy-layouts/." "$WEBROOT/layout/"; fi
     for target in $TARGETS; do rm -rf -- "$WEBROOT/$target"; done
     tar -C "$WEBROOT" -xzf "$BACKUP/files.tar.gz"
@@ -84,6 +86,9 @@ curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-d
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
 "$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -o "$BACKUP/home-check.html"
+curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/admin/hotsite_layout.hhvm" -D "$BACKUP/admin-headers.txt" -o "$BACKUP/admin-check.html"
+[ -s "$BACKUP/admin-check.html" ] || { echo 'A tela nativa de layout retornou vazia.' >&2; exit 1; }
+grep -qi '^X-VPSCloud-Layout: enabled' "$BACKUP/admin-headers.txt" || { echo 'A integração de layout não carregou.' >&2; exit 1; }
 echo "Layout selecionado: $SELECTED"
 CHANGED=0
 echo "Backup: $BACKUP"

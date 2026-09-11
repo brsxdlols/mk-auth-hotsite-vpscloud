@@ -2,6 +2,7 @@
 // Runs only as a hook around the native authenticated layout page.
 function vpscloud_admin_layout_begin() {
     if (basename($_SERVER['SCRIPT_FILENAME'] ?? '') !== 'hotsite_layout.hhvm') return;
+    header('X-VPSCloud-Layout: enabled');
     $request = null;
     if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['vpscloud_visual_save'])) {
         $request = $_POST;
@@ -9,12 +10,22 @@ function vpscloud_admin_layout_begin() {
     }
     require_once __DIR__.'/vpscloud-db.php';
     require_once __DIR__.'/vpscloud-layout.php';
-    try { $db=vpscloud_db(); } catch(Throwable $e) { error_log($e->getMessage()); return; }
-    ob_start(function($html) use ($request,$db) {
+
+    ob_start(function($html) use ($request) {
         // The native page must have passed its own authentication and rendered the layout form.
         if (!preg_match('~<select\\b[^>]*>.*?layout-vpscloud-(?:sistema|whatsapp).*?</select>~is', $html)
             || session_id() === '') return $html;
         try {
+            // Reuse the connection opened by MK-Auth after its authentication.
+            // Loading conexao.php before the native page hides its variables in local scope.
+            $db=null;
+            foreach($GLOBALS as $candidate) {
+                if($candidate instanceof mysqli && !$candidate->connect_errno){$db=$candidate;break;}
+            }
+            if(!$db && defined('CONHOSTNAME') && defined('CONUSERNAME') && defined('CONPASSWRD') && defined('CONDATABASE')) {
+                $db=new mysqli(CONHOSTNAME,CONUSERNAME,CONPASSWRD,CONDATABASE);
+            }
+            if(!$db || $db->connect_errno)throw new RuntimeException('Conexão nativa indisponível.');
             require_once __DIR__.'/vpscloud-db.php';
             require_once __DIR__.'/vpscloud-layout.php';
 
@@ -44,3 +55,5 @@ function vpscloud_admin_layout_begin() {
         }
     });
 }
+
+vpscloud_admin_layout_begin();

@@ -7,11 +7,13 @@ if(!$root||!$backup||strpos($backup,'/opt/mk-auth/backups/vpscloud-hotsite/')!==
 $admin='/opt/mk-auth/admin/hotsite_layout.hhvm';
 if(!is_file($admin))throw new RuntimeException('Tela de layout não encontrada.');
 $native=file_get_contents($admin);
-$marker='/* VPSCLOUD_LAYOUT_SETTINGS */';
-if(strpos($native,$marker)===false){
- $prefix="<?php ".$marker." require_once ".var_export($root.'/vpscloud-admin-layout.php',true)."; vpscloud_admin_layout_begin(); ?>";
- if(file_put_contents($admin,$prefix.$native)===false)throw new RuntimeException('Falha ao integrar layout.');
-}
+$clean=preg_replace('~^<\\?php /\\* VPSCLOUD_LAYOUT_SETTINGS \\*/.*?\\?>~s','',$native,1);
+if($clean!==$native && file_put_contents($admin,$clean)===false)throw new RuntimeException('Falha ao restaurar arquivo nativo.');
+$adminHt=dirname($admin).'/.htaccess';
+$rules=is_file($adminHt)?file_get_contents($adminHt):'';
+$rules=preg_replace('~# BEGIN VPSCLOUD LAYOUT.*?# END VPSCLOUD LAYOUT\\s*~s','',$rules);
+$rules.="\n# BEGIN VPSCLOUD LAYOUT\n<Files \"hotsite_layout.hhvm\">\nSetEnv PHP_VALUE \"auto_prepend_file=".$root."/vpscloud-admin-layout.php\"\n</Files>\n# END VPSCLOUD LAYOUT\n";
+if(file_put_contents($adminHt,$rules)===false)throw new RuntimeException('Falha ao integrar configurações.');
 $ht=$root.'/.htaccess';$content=is_file($ht)?file_get_contents($ht):'';
 $block="# BEGIN VPSCLOUD META\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteRule ^(?:index\\.html)?$ vpscloud-home.php [END]\n</IfModule>\n# END VPSCLOUD META\n";
 $content=preg_replace('~# BEGIN VPSCLOUD META.*?# END VPSCLOUD META\\s*~s','',$content);
