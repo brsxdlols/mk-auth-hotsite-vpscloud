@@ -106,13 +106,11 @@ plansRail?.addEventListener('dragstart',e=>e.preventDefault());
 q('#contact-form')?.addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),parts=[`Olá! Meu nome é ${f.get('nome')}.`,`Assunto: ${f.get('assunto')}.`,`WhatsApp: ${f.get('whatsapp')}.`,f.get('email')?`E-mail: ${f.get('email')}.`:'',f.get('cidade')?`Cidade: ${f.get('cidade')}.`:'',f.get('bairro')?`Bairro/localidade: ${f.get('bairro')}.`:'',f.get('endereco')?`Endereço: ${f.get('endereco')}.`:'',f.get('mensagem')?`Mensagem: ${f.get('mensagem')}`:''].filter(Boolean);if(whatsappNumber)window.open('https://wa.me/55'+whatsappNumber+'?text='+encodeURIComponent(parts.join('\n')),'_blank');else location.href='mailto:?subject='+encodeURIComponent(f.get('assunto'))+'&body='+encodeURIComponent(parts.join('\n'))});
 const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in-view');observer.unobserve(entry.target)}}),{threshold:.15});qa('.reveal,.feature').forEach(el=>observer.observe(el));
 
-const phoneScenes=qa('.phone-scene'),phoneDots=qa('[data-phone-slide]'),phonePause=q('.phone-pause');
+const phoneScenes=qa('.phone-scene'),phoneDots=qa('[data-phone-slide]');
 if(phoneScenes.length){
  let phoneIndex=0,phoneVisible=false,phonePaused=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const showPhone=(index)=>{phoneIndex=index;phoneScenes.forEach((el,i)=>{el.classList.toggle('active',i===index);el.setAttribute('aria-hidden',String(i!==index))});phoneDots.forEach((el,i)=>{el.classList.toggle('active',i===index);el.setAttribute('aria-pressed',String(i===index))})};
- const updatePause=()=>{phonePause.textContent=phonePaused?'Retomar animação':'Pausar animação';phonePause.setAttribute('aria-pressed',String(phonePaused))};
  phoneDots.forEach((el,i)=>el.addEventListener('click',()=>showPhone(i)));
- phonePause.addEventListener('click',()=>{phonePaused=!phonePaused;updatePause()});updatePause();
  new IntersectionObserver(entries=>{phoneVisible=entries[0].isIntersecting},{threshold:.15}).observe(q('.showcase-phone'));
  setInterval(()=>{if(phoneVisible&&!phonePaused&&!document.hidden)showPhone((phoneIndex+1)%phoneScenes.length)},4500);
 }
