@@ -103,3 +103,5 @@ body{background:#eef6fd}.quick{background:linear-gradient(180deg,#fff 0%,#edf6ff
 }
 
 #plans{touch-action:pan-y pinch-zoom;user-select:none}#plans .plan[data-position="left"],#plans .plan[data-position="right"]{cursor:pointer}#plans .plan[data-position="current"]{cursor:grab}#plans.is-dragging,#plans.is-dragging .plan{cursor:grabbing}
+
+.plan-visual.combo{background:linear-gradient(130deg,#29215d,#6644ad)}.plan-visual.rural{background:linear-gradient(130deg,#073e40,#137d69)}.plan-visual.fiber{background:linear-gradient(130deg,#093357,#086ea6)}.plan-visual.rural .plan-heading b{font-size:21px}
