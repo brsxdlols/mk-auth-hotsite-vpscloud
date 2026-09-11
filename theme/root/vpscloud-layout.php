@@ -3,19 +3,26 @@ function vpscloud_visual_modes() {
     return ['dinamico'=>'dynamic','internet'=>'network','fibra'=>'fiber','rural'=>'rural','combo'=>'combo','servicos'=>'service','cloud'=>'cloud','integracoes'=>'api','suporte'=>'support','licencas'=>'license','regularizacao'=>'regulatory'];
 }
 function vpscloud_layouts() {
-    $layouts = ['layout-vpscloud-whatsapp'=>'whatsapp', 'layout-vpscloud-sistema'=>'sistema'];
-    foreach (['sistema','whatsapp'] as $mode) {
-        foreach (vpscloud_visual_modes() as $name => $visual) $layouts['layout-vpscloud-'.$mode.'-'.$name] = $mode;
-    }
-    return $layouts;
+    return ['layout-vpscloud-whatsapp'=>'whatsapp','layout-vpscloud-sistema'=>'sistema'];
+}
+function vpscloud_legacy_layouts() {
+    $result=[];
+    foreach (['sistema','whatsapp'] as $mode) foreach(vpscloud_visual_modes() as $name=>$value) $result['layout-vpscloud-'.$mode.'-'.$name]=[$mode,$value];
+    return $result;
 }
 function vpscloud_visual_mode($db) {
-    $selected = vpscloud_selected_layout($db);
-    if (!isset(vpscloud_layouts()[$selected])) return 'dynamic';
-    foreach (vpscloud_visual_modes() as $name => $visual) {
-        if (substr($selected, -strlen('-'.$name)) === '-'.$name) return $visual;
-    }
-    return 'dynamic';
+    $result=$db->query("SELECT valor FROM sis_opcao WHERE nome='vpscloud_plan_visual' LIMIT 1");
+    $row=$result?$result->fetch_assoc():null;
+    return $row && in_array($row['valor'],array_values(vpscloud_visual_modes()),true)?$row['valor']:'dynamic';
+}
+function vpscloud_set_visual_mode($db,$value) {
+    if(!in_array($value,array_values(vpscloud_visual_modes()),true)) throw new RuntimeException('Imagem inválida.');
+    $result=$db->query("SELECT valor FROM sis_opcao WHERE nome='vpscloud_plan_visual' LIMIT 1");
+    if(!$result)throw new RuntimeException('Falha ao consultar preferência.');
+    $stmt=$result->fetch_assoc()?$db->prepare("UPDATE sis_opcao SET valor=? WHERE nome='vpscloud_plan_visual'"):$db->prepare("INSERT INTO sis_opcao(nome,valor) VALUES('vpscloud_plan_visual',?)");
+    if(!$stmt)throw new RuntimeException('Falha ao salvar preferência.');
+    $stmt->bind_param('s',$value);
+    if(!$stmt->execute())throw new RuntimeException('Falha ao salvar preferência.');
 }
 function vpscloud_selected_layout($db) {
     $result = $db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");

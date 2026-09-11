@@ -13,7 +13,7 @@ for candidate in "${VPSCLOUD_PHP:-php}" /opt/php8/bin/php /usr/bin/php7.3; do
   if "$candidate" -r 'exit(PHP_VERSION_ID >= 70300 && extension_loaded("mysqli") ? 0 : 1);' >/dev/null 2>&1; then PHP_BIN=$candidate; break; fi
 done
 [ -n "$PHP_BIN" ] || { echo 'É necessário PHP 7.3+ com mysqli.' >&2; exit 1; }
-ROOT_FILES='planos.php vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
+ROOT_FILES='vpscloud-admin-layout.php vpscloud-home.php vpscloud-meta.php planos.php vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
 for file in $ROOT_FILES; do
   [ -s "$ROOT_DIR/theme/root/$file" ] || { echo "Pacote incompleto: $file" >&2; exit 1; }
   "$PHP_BIN" -l "$ROOT_DIR/theme/root/$file" >/dev/null
@@ -28,7 +28,7 @@ BACKUP=$(mktemp -d /opt/mk-auth/backups/vpscloud-hotsite/XXXXXXXX 2>/dev/null) |
 chmod 0700 "$BACKUP"
 "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --read-theme > "$BACKUP/theme.json"
 LAYOUTS=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --list-layouts)
-TARGETS="index.html layout/vpscloud midias_vpscloud $ROOT_FILES"
+TARGETS=".htaccess index.html layout/vpscloud midias_vpscloud $ROOT_FILES"
 for layout in $LAYOUTS; do TARGETS="$TARGETS layout/$layout"; done
 : > "$BACKUP/existing.txt"
 for target in $TARGETS; do
@@ -36,12 +36,15 @@ for target in $TARGETS; do
 done
 tar -C "$WEBROOT" -czf "$BACKUP/files.tar.gz" -T "$BACKUP/existing.txt"
 if [ -e /usr/local/sbin/vpscloud-cadastro-modo ]; then cp -a /usr/local/sbin/vpscloud-cadastro-modo "$BACKUP/cadastro-modo"; fi
+cp -p /opt/mk-auth/admin/hotsite_layout.hhvm "$BACKUP/admin-layout.hhvm"
 CHANGED=0
 rollback() {
   code=$?
   trap - EXIT HUP INT TERM
   if [ "$CHANGED" = 1 ]; then
     echo "Falha: restaurando backup $BACKUP" >&2
+    cp -p "$BACKUP/admin-layout.hhvm" /opt/mk-auth/admin/hotsite_layout.hhvm
+    if [ -d "$BACKUP/legacy-layouts" ]; then cp -a "$BACKUP/legacy-layouts/." "$WEBROOT/layout/"; fi
     for target in $TARGETS; do rm -rf -- "$WEBROOT/$target"; done
     tar -C "$WEBROOT" -xzf "$BACKUP/files.tar.gz"
     "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --restore-theme "$BACKUP/theme.json" || echo 'Falha na restauração do tema; consulte o backup.' >&2
@@ -78,6 +81,9 @@ case "$SELECTED" in layout-vpscloud-sistema|layout-vpscloud-sistema-*) MODE=sist
 ln -sfn "layout/$SELECTED/index.html" "$WEBROOT/index.html"
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=layout" -o "$BACKUP/layout-check.json"
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE"
+"$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
+"$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null
+curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -o "$BACKUP/home-check.html"
 echo "Layout selecionado: $SELECTED"
 CHANGED=0
 echo "Backup: $BACKUP"

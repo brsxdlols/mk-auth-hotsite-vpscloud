@@ -1,3 +1,4 @@
+<?php require_once __DIR__.'/vpscloud-meta.php'; try { vpscloud_meta_db(); ob_start('vpscloud_meta_html'); } catch(Throwable $e) { error_log($e->getMessage()); } ?>
 <!doctype html>
 <html lang="pt-BR">
 <head>

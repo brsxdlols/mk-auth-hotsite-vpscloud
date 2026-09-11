@@ -62,21 +62,26 @@ O diretório padrão é `/var/www`. `VPSCLOUD_WEBROOT` permite um subdiretório 
 
 Os testes usam tabelas temporárias restritas à conexão de teste, sem modificar tabelas persistentes.
 
-### Imagens dos planos em Hotsite > Layout
 
-O campo Tema oferece as combinações de cadastro (sistema ou whatsapp) e imagem.
-Exemplos: layout-vpscloud-sistema-internet, layout-vpscloud-whatsapp-cloud,
-layout-vpscloud-sistema-dinamico.
+### Imagens dos planos
 
-Sufixos disponíveis: dinamico, internet, fibra, rural, combo, servicos, cloud,
-integracoes, suporte, licencas e regularizacao. Um sufixo fixo aplica a mesma
-categoria visual a todos os planos, sem alterar seus nomes, preços ou descrições.
-Dinamico interpreta o nome de cada plano. Os dois layouts antigos continuam
-dinâmicos; atualizações preservam a escolha. Novas instalações usam cadastro via sistema.
+Em Hotsite > Layout há somente dois temas VPS Cloud:
+layout-vpscloud-sistema e layout-vpscloud-whatsapp.
+Abaixo do formulário nativo, o campo Imagens dos planos permite escolher
+Dinâmico ou uma categoria fixa. Use Salvar imagens para gravar essa preferência.
+A primeira instalação usa Dinâmico; atualizações preservam a preferência.
 
-No modo dinâmico, a prioridade é: regularização (CFT, CRT, Anatel, CREA, SCM,
-SICI, Mosaico, outorga, homologação); licenças; suporte; serviços; combo;
-cloud; integrações; rural; fibra; internet. Nomes não identificados usam Serviços.
-Exemplos: Suporte Cloud = Suporte; Licença MK-Auth = Licenças;
-Serviço Internet = Serviços; Combo Fibra = Combo; Fibra Cidade = Fibra.
-As ilustrações são genéricas e não representam certificação ou vínculo institucional.
+Categorias: Internet, Fibra, Internet Rural, Combo, Serviços, Cloud,
+Integrações, Suporte, Licenças e Regularização. A categoria fixa altera somente
+a ilustração e o título da imagem, sem alterar nome, preço ou descrição do plano.
+No modo dinâmico, Suporte Cloud usa Suporte, Licença MK-Auth usa Licenças,
+CFT/Anatel usa Regularização e Serviço Internet usa Serviços.
+As ilustrações são genéricas e não representam vínculo institucional.
+
+Os antigos temas com sufixo de imagem são migrados para os dois temas básicos;
+sua preferência é preservada e os diretórios extras ficam no backup.
+O instalador inclui a configuração abaixo da tela nativa, preservando sua autenticação.
+
+O título HTML e os metadados de compartilhamento são preenchidos no servidor
+com o nome em Dados do Provedor. Pré-visualizações já armazenadas pelos aplicativos
+podem permanecer antigas até a atualização do cache desses aplicativos.

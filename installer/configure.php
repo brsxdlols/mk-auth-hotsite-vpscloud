@@ -14,7 +14,13 @@ try {
     $row = $result->fetch_assoc();
     if (in_array('--read-theme', $argv, true)) { echo json_encode($row); exit(0); }
     if (in_array('--theme-name', $argv, true)) { echo vpscloud_selected_layout($db); exit(0); }
-    $theme = vpscloud_install_layout($row['valor'] ?? '');
+    $previousTheme=$row['valor'] ?? '';
+    $legacy=vpscloud_legacy_layouts();
+    if (in_array('--select-theme',$argv,true) && isset($legacy[$previousTheme])) {
+        vpscloud_set_visual_mode($db,$legacy[$previousTheme][1]);
+        $previousTheme='layout-vpscloud-'.$legacy[$previousTheme][0];
+    }
+    $theme = vpscloud_install_layout($previousTheme);
     if (in_array('--restore-theme', $argv, true)) {
         $previous = json_decode(file_get_contents($argv[count($argv)-1]), true);
         if (!$previous) {
