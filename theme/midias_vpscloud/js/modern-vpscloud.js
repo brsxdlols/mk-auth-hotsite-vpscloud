@@ -137,9 +137,19 @@ const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entr
 const phoneScenes=qa('.phone-scene'),phoneDots=qa('[data-phone-slide]');
 if(phoneScenes.length){
  let phoneIndex=0,phoneVisible=false,phonePaused=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- const showPhone=(index)=>{phoneIndex=index;phoneScenes.forEach((el,i)=>{el.classList.toggle('active',i===index);el.setAttribute('aria-hidden',String(i!==index))});phoneDots.forEach((el,i)=>{el.classList.toggle('active',i===index);el.setAttribute('aria-pressed',String(i===index))})};
- phoneDots.forEach((el,i)=>el.addEventListener('click',()=>showPhone(i)));
+ let lastPhoneAction=0;
+ const wings=qa('.phone-wing');
+ const showPhone=(index)=>{phoneIndex=(index+phoneScenes.length)%phoneScenes.length;index=phoneIndex;
+ wings.forEach((wing,i)=>{const n=(index+(i===0?-1:1)+phoneScenes.length)%phoneScenes.length;wing.dataset.scene=n;wing.querySelector('img').src=phoneScenes[n].querySelector('img').src;wing.setAttribute('aria-label','Mostrar '+phoneScenes[n].querySelector('strong').textContent)});
+phoneScenes.forEach((el,i)=>{el.classList.toggle('active',i===index);el.setAttribute('aria-hidden',String(i!==index))});phoneDots.forEach((el,i)=>{el.classList.toggle('active',i===index);el.setAttribute('aria-pressed',String(i===index))})};
+ const selectPhone=i=>{lastPhoneAction=Date.now();showPhone(i)};
+ phoneDots.forEach((el,i)=>el.addEventListener('click',()=>selectPhone(i)));
+ wings.forEach(wing=>wing.addEventListener('click',()=>selectPhone(Number(wing.dataset.scene))));
+ const screen=q('.showcase-phone');screen.setAttribute('tabindex','0');screen.setAttribute('aria-label','Experiências com sua conexão. Toque para ver a próxima.');
+ screen.addEventListener('click',()=>selectPhone(phoneIndex+1));
+ screen.addEventListener('keydown',e=>{if(['ArrowRight','ArrowLeft','Enter',' '].includes(e.key)){e.preventDefault();selectPhone(phoneIndex+(e.key==='ArrowLeft'?-1:1))}});
+ showPhone(0);
  new IntersectionObserver(entries=>{phoneVisible=entries[0].isIntersecting},{threshold:.15}).observe(q('.showcase-phone'));
- setInterval(()=>{if(phoneVisible&&!phonePaused&&!document.hidden)showPhone((phoneIndex+1)%phoneScenes.length)},4500);
+ setInterval(()=>{if(phoneVisible&&!phonePaused&&!document.hidden&&Date.now()-lastPhoneAction>6000)showPhone((phoneIndex+1)%phoneScenes.length)},4500);
 }
 }());
