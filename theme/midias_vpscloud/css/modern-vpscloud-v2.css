@@ -174,3 +174,11 @@ body{background:#eef6fd}.quick{background:linear-gradient(180deg,#fff 0%,#edf6ff
 @media(prefers-reduced-motion:reduce){.phone-wing,.showcase-phone,.phone-dot{transition:none}}
 
 .phone-gallery{isolation:isolate}.phone-gallery .showcase-phone{z-index:4}.phone-scene img[src*='feature-streaming.png']{object-position:left center}
+
+.signup-picker{width:min(880px,calc(100% - 32px));max-height:85vh;border:0;border-radius:22px;padding:28px;color:#10294a;background:#f5faff;box-sizing:border-box}
+.signup-picker::backdrop{background:#03152bcc;backdrop-filter:blur(4px)}
+.signup-picker-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}.signup-picker h2{font-size:28px;margin:0}.signup-picker-head p{color:#536b85}
+.signup-picker-head button{background:#e3effb;border:0;border-radius:50%;font-size:26px;width:40px;height:40px;flex-shrink:0;cursor:pointer}
+.signup-picker-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.signup-picker-list article{padding:20px;background:white;border:1px solid #d5e5f4;border-radius:16px}.signup-picker-list h3{overflow-wrap:anywhere;font-size:18px;margin:0 0 12px}.signup-picker-list .btn{display:block;text-align:center;margin-top:18px}
+@media(min-width:821px){.nav nav{gap:18px}.nav .brand>span[data-name]{max-width:250px}.nav nav a{font-size:13px}}
+@media(max-width:600px){.signup-picker{padding:20px}.signup-picker-list{grid-template-columns:1fr}}

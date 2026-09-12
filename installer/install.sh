@@ -13,7 +13,7 @@ for candidate in "${VPSCLOUD_PHP:-php}" /opt/php8/bin/php /usr/bin/php7.3; do
   if "$candidate" -r 'exit(PHP_VERSION_ID >= 70300 && extension_loaded("mysqli") ? 0 : 1);' >/dev/null 2>&1; then PHP_BIN=$candidate; break; fi
 done
 [ -n "$PHP_BIN" ] || { echo 'É necessário PHP 7.3+ com mysqli.' >&2; exit 1; }
-ROOT_FILES='vpscloud-admin-layout.php vpscloud-home.php vpscloud-meta.php planos.php vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
+ROOT_FILES='vpscloud-favicon.php vpscloud-admin-layout.php vpscloud-home.php vpscloud-meta.php planos.php vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
 for file in $ROOT_FILES; do
   [ -s "$ROOT_DIR/theme/root/$file" ] || { echo "Pacote incompleto: $file" >&2; exit 1; }
   "$PHP_BIN" -l "$ROOT_DIR/theme/root/$file" >/dev/null
@@ -85,6 +85,7 @@ curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-d
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE"
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
 "$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null
+"$PHP_BIN" "$ROOT_DIR/installer/render-meta.php" "$WEBROOT"
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -o "$BACKUP/home-check.html"
 grep -q 'modern-vpscloud' "$BACKUP/home-check.html" || { echo 'O hotsite instalado não foi encontrado na resposta HTTP.' >&2; exit 1; }
 # The optional admin hook must never roll back a healthy public hotsite.

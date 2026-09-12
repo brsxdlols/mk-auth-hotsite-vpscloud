@@ -16,7 +16,7 @@
     <div class="nav wrap">
       <a class="brand" href="/#inicio"><span class="brand-frame"><img src="mkfiles/logo.jpg?v=abgs2" alt="Logo do provedor"></span><span data-name>Provedor de Internet</span></a>
       <button class="menu-btn" aria-label="Abrir menu" aria-expanded="false">☰</button>
-      <nav><a href="/#inicio">Início</a><a href="/#beneficios">Experiências</a><a href="/planos.php">Planos</a><a href="/#atendimento">Atendimento</a><a class="nav-cta" href="/central/">Central do Assinante</a></nav>
+      <nav><a href="/#inicio">Início</a><a href="/#beneficios">Experiências</a><a href="/planos.php">Planos</a><a href="/#atendimento">Contato</a><a class="nav-cta" href="/central/">Central do Assinante</a></nav>
     </div>
   </header>
 
@@ -26,4 +26,4 @@
   <a class="back-to-top" href="#topo" aria-label="Voltar ao topo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 14 6-6 6 6M12 8v12"/></svg></a>
   <a class="floating-wa" data-whatsapp target="_blank" aria-label="WhatsApp">✆</a>
   <script src="midias_vpscloud/js/modern-vpscloud.js?v=20260910-modes12"></script>
-</body></html>
+<script src="/midias_vpscloud/js/signup-picker.js?v=20260912-1"></script></body></html>
