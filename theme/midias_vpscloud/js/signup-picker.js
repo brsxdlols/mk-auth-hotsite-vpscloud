@@ -18,9 +18,11 @@ async function load(){
   if(!data.planos.length){list.append(text('p','Nenhum plano disponível no momento. Entre em contato com o provedor.'));return;}
   const route=data.config?.cadastro_modo==='whatsapp'?'/cadastro-whatsapp.hhvm':'/cadastro-sistema.php';
   data.planos.forEach(plan=>{
-   const card=document.createElement('article');card.append(text('h3',plan.nome));
+   const card=document.createElement('article');
+   if(window.vpscloudPlanVisual){const visual=document.createElement('div');visual.innerHTML=window.vpscloudPlanVisual(plan.nome,data.config?.plan_visual_mode||'dynamic');card.append(visual.firstElementChild);}
+   const details=document.createElement('div');details.className='signup-plan-details';card.append(details);details.append(text('h3',plan.nome));
    const price=Number(String(plan.valor).replace(',','.'));
-   card.append(text('p',Number.isFinite(price)?price.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' / mês':'Consulte o valor'));
+   details.append(text('p',Number.isFinite(price)?price.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' / mês':'Consulte o valor'));
    const link=text('a','Selecionar plano');link.className='btn primary';link.href=route+'?plano='+encodeURIComponent(plan.nome);card.append(link);list.append(card);
   });
  }catch(e){if(token!==generation||!dialog.open)return;list.replaceChildren(text('p','Não foi possível carregar os planos.'));
