@@ -21,7 +21,7 @@ function vpscloud_meta_html($html) {
         if(!preg_match('/^[a-z0-9.-]+(?::[0-9]+)?$/i',$host))$host='';
         $https=(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off')||($_SERVER['HTTP_X_FORWARDED_PROTO']??'')==='https';
         $base=($https?'https':'http').'://'.$host;
-        $tags='<link rel="icon" type="image/png" sizes="192x192" href="/vpscloud-favicon.php"><meta property="og:type" content="website"><meta property="og:title" content="'.$title.'"><meta property="og:site_name" content="'.$title.'"><meta property="og:description" content="Conheça os planos e fale com '.$title.'."><meta name="twitter:card" content="summary"><meta name="twitter:title" content="'.$title.'">';
+        $tags='<link rel="icon" type="image/png" sizes="192x192" href="/vpscloud-favicon.php"><meta property="og:type" content="website"><meta property="og:title" content="'.$title.'"><meta property="og:site_name" content="'.$title.'"><meta property="og:description" content="Você conectado sempre. Conectando você em uma experiência inesquecível!"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="'.$title.'">';
         if($host!=='')$tags.='<meta property="og:url" content="'.$esc($base.'/').'"><meta property="og:image" content="'.$esc($base.'/mkfiles/logo.jpg').'">';
         $html=preg_replace_callback('~<title>.*?</title>~is',function() use ($title){return '<title>'.$title.'</title>';}, $html,1);
         return str_ireplace('</head>',$tags.'</head>',$html);
