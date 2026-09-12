@@ -83,7 +83,7 @@ plansRail?.addEventListener('click',e=>{
  if(position==='left'||position==='right'){e.preventDefault();e.stopPropagation();movePlans(position==='right'?1:-1)}
 },true);
 plansRail?.addEventListener('pointerdown',e=>{
- if(!e.isPrimary||e.button!==0)return;
+ if(e.pointerType==='touch'||!e.isPrimary||e.button!==0)return;
  dragStart={id:e.pointerId,x:e.clientX,y:e.clientY};
 });
 plansRail?.addEventListener('pointermove',e=>{
@@ -103,6 +103,33 @@ plansRail?.addEventListener('pointerup',e=>{
  if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)){suppressPlanClickUntil=Date.now()+500;movePlans(dx<0?1:-1)}
 });
 plansRail?.addEventListener('pointercancel',()=>{dragStart=null;plansRail.classList.remove('is-dragging')});
+// Lock horizontal touch gestures before Safari starts native scrolling.
+let touchDrag=null;
+plansRail?.addEventListener('touchstart',e=>{
+ if(e.touches.length!==1){touchDrag=null;return;}
+ const t=e.touches[0];touchDrag={id:t.identifier,x:t.clientX,y:t.clientY,dx:0,axis:null};
+},{passive:true});
+plansRail?.addEventListener('touchmove',e=>{
+ if(!touchDrag||e.touches.length!==1)return;
+ const t=e.touches[0];if(t.identifier!==touchDrag.id)return;
+ const dx=t.clientX-touchDrag.x,dy=t.clientY-touchDrag.y;
+ if(!touchDrag.axis&&Math.max(Math.abs(dx),Math.abs(dy))>6)touchDrag.axis=Math.abs(dx)>Math.abs(dy)?'x':'y';
+ if(touchDrag.axis==='x'){
+  if(e.cancelable)e.preventDefault();
+  touchDrag.dx=dx;suppressPlanClickUntil=Date.now()+600;
+  plansRail.classList.add('is-dragging');
+ }
+},{passive:false});
+plansRail?.addEventListener('touchend',e=>{
+ if(!touchDrag)return;
+ const gesture=touchDrag;touchDrag=null;plansRail.classList.remove('is-dragging');
+ if(gesture.axis==='x'){
+  if(e.cancelable)e.preventDefault();
+  suppressPlanClickUntil=Date.now()+600;
+  if(Math.abs(gesture.dx)>30)movePlans(gesture.dx<0?1:-1);
+ }
+},{passive:false});
+plansRail?.addEventListener('touchcancel',()=>{touchDrag=null;plansRail.classList.remove('is-dragging');});
 plansRail?.addEventListener('dragstart',e=>e.preventDefault());
 q('#contact-form')?.addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.currentTarget),parts=[`Olá! Meu nome é ${f.get('nome')}.`,`Assunto: ${f.get('assunto')}.`,`WhatsApp: ${f.get('whatsapp')}.`,f.get('email')?`E-mail: ${f.get('email')}.`:'',f.get('cidade')?`Cidade: ${f.get('cidade')}.`:'',f.get('bairro')?`Bairro/localidade: ${f.get('bairro')}.`:'',f.get('endereco')?`Endereço: ${f.get('endereco')}.`:'',f.get('mensagem')?`Mensagem: ${f.get('mensagem')}`:''].filter(Boolean);if(whatsappNumber)window.open('https://wa.me/55'+whatsappNumber+'?text='+encodeURIComponent(parts.join('\n')),'_blank');else location.href='mailto:?subject='+encodeURIComponent(f.get('assunto'))+'&body='+encodeURIComponent(parts.join('\n'))});
 const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in-view');observer.unobserve(entry.target)}}),{threshold:.15});qa('.reveal,.feature').forEach(el=>observer.observe(el));
