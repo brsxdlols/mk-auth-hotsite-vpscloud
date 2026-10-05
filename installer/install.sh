@@ -86,8 +86,14 @@ else
 fi
 SELECTED=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --theme-name)
 case "$SELECTED" in layout-vpscloud-whatsapp|layout-vpscloud-whatsapp-*) MODE=whatsapp;; *) MODE=sistema;; esac
-# The managed index.html bypasses theme selection on static-file proxies. It is backed up above.
-if [ -e "$WEBROOT/index.html" ] || [ -L "$WEBROOT/index.html" ]; then rm -f "$WEBROOT/index.html"; fi
+# Remove only the shortcut installed by previous VPS Cloud releases.
+# Native entrypoints and index files belonging to other themes remain untouched.
+if [ -L "$WEBROOT/index.html" ]; then
+  case "$(readlink "$WEBROOT/index.html")" in
+    layout/layout-vpscloud-*/index.html|layout/vpscloud/index.html|"$WEBROOT"/layout/layout-vpscloud-*/index.html|"$WEBROOT"/layout/vpscloud/index.html)
+      rm -f "$WEBROOT/index.html";;
+  esac
+fi
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=layout" -o "$BACKUP/layout-check.json"
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE"
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
