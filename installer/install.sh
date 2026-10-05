@@ -88,10 +88,13 @@ SELECTED=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --theme-name)
 case "$SELECTED" in layout-vpscloud-whatsapp|layout-vpscloud-whatsapp-*) MODE=whatsapp;; *) MODE=sistema;; esac
 # Remove only the shortcut installed by previous VPS Cloud releases.
 # Native entrypoints and index files belonging to other themes remain untouched.
+INDEX_SHORTCUT_FIXED=0
 if [ -L "$WEBROOT/index.html" ]; then
   case "$(readlink "$WEBROOT/index.html")" in
     layout/layout-vpscloud-*/index.html|layout/vpscloud/index.html|"$WEBROOT"/layout/layout-vpscloud-*/index.html|"$WEBROOT"/layout/vpscloud/index.html)
-      rm -f "$WEBROOT/index.html";;
+      echo 'Detectado atalho index.html de uma instalação antiga do VPS CLOUD que impede a troca de tema. Corrigindo...'
+      rm -f "$WEBROOT/index.html"
+      INDEX_SHORTCUT_FIXED=1;;
   esac
 fi
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=layout" -o "$BACKUP/layout-check.json"
@@ -124,4 +127,7 @@ echo "Layout selecionado: $SELECTED"
 CHANGED=0
 echo "Backup: $BACKUP"
 echo 'Tema VPS CLOUD instalado e validado com sucesso.'
+if [ "$INDEX_SHORTCUT_FIXED" = 1 ]; then
+  echo 'Atalho index.html corrigido e hotsite atualizado com sucesso. A seleção de tema do MK-Auth foi restabelecida.'
+fi
 echo 'Escolha o cadastro em Hotsite > Layout: layout-vpscloud-whatsapp ou layout-vpscloud-sistema.'
