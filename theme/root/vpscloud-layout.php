@@ -62,11 +62,11 @@ if (PHP_SAPI === 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE
         require_once __DIR__.'/vpscloud-db.php';
         $link = $root.'/index.html';
         if (is_dir($link)) throw new RuntimeException('index.html não pode ser um diretório.');
-        $temporary = $root.'/.vpscloud-index-'.bin2hex(random_bytes(6));
-        if (!symlink('layout/'.$theme.'/index.html', $temporary)) throw new RuntimeException('Falha ao preparar o layout.');
-        try { vpscloud_set_layout(vpscloud_db(), $theme); }
-        catch (Throwable $e) { unlink($temporary); throw $e; }
-        if (!rename($temporary, $link)) { unlink($temporary); throw new RuntimeException('Falha ao atualizar o arquivo inicial.'); }
+        // Never recreate the static shortcut: the dispatcher reads the saved theme.
+        if (is_link($link) && strpos((string)readlink($link), 'layout/layout-vpscloud-') === 0) {
+            if (!unlink($link)) throw new RuntimeException('Falha ao remover atalho antigo.');
+        }
+        vpscloud_set_layout(vpscloud_db(), $theme);
         echo 'Layout selecionado: '.$theme.PHP_EOL;
     } catch (Throwable $e) { fwrite(STDERR, $e->getMessage().PHP_EOL); exit(1); }
 }

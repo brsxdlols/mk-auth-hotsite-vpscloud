@@ -20,7 +20,7 @@ try {
         vpscloud_set_visual_mode($db,$legacy[$previousTheme][1]);
         $previousTheme='layout-vpscloud-'.$legacy[$previousTheme][0];
     }
-    $theme = vpscloud_install_layout($previousTheme);
+    $theme = in_array('--preserve-theme', $argv, true) ? $previousTheme : vpscloud_install_layout($previousTheme);
     if (in_array('--restore-theme', $argv, true)) {
         $previous = json_decode(file_get_contents($argv[count($argv)-1]), true);
         if (!$previous) {

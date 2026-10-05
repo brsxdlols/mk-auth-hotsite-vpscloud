@@ -20,6 +20,8 @@ for file in $ROOT_FILES; do
 done
 [ -s "$ROOT_DIR/theme/layout/vpscloud/index.html" ]
 [ -s "$ROOT_DIR/theme/midias_vpscloud/js/modern-vpscloud.js" ]
+PRESERVE_THEME=0
+[ ! -d "$WEBROOT/layout/layout-vpscloud-sistema" ] || PRESERVE_THEME=1
 "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --check
 BACKUP=$(mktemp -d /opt/mk-auth/backups/vpscloud-hotsite/XXXXXXXX 2>/dev/null) || {
   mkdir -p /opt/mk-auth/backups/vpscloud-hotsite
@@ -77,17 +79,28 @@ cp -a "$ROOT_DIR/theme/midias_vpscloud/." "$WEBROOT/midias_vpscloud/"
 find "$WEBROOT/layout/vpscloud" "$WEBROOT/layout/layout-vpscloud-whatsapp" "$WEBROOT/layout/layout-vpscloud-sistema" "$WEBROOT/midias_vpscloud" -type d -exec chmod 0755 {} \;
 find "$WEBROOT/layout/vpscloud" "$WEBROOT/layout/layout-vpscloud-whatsapp" "$WEBROOT/layout/layout-vpscloud-sistema" "$WEBROOT/midias_vpscloud" -type f -exec chmod 0644 {} \;
 install -m 0755 "$ROOT_DIR/installer/vpscloud-cadastro-modo" /usr/local/sbin/vpscloud-cadastro-modo
-"$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme
+if [ "$PRESERVE_THEME" = 1 ]; then
+  "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme --preserve-theme
+else
+  "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme
+fi
 SELECTED=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --theme-name)
-case "$SELECTED" in layout-vpscloud-sistema|layout-vpscloud-sistema-*) MODE=sistema;; layout-vpscloud-whatsapp|layout-vpscloud-whatsapp-*) MODE=whatsapp;; *) echo 'Layout inválido.' >&2; exit 1;; esac
-ln -sfn "layout/$SELECTED/index.html" "$WEBROOT/index.html"
+case "$SELECTED" in layout-vpscloud-whatsapp|layout-vpscloud-whatsapp-*) MODE=whatsapp;; *) MODE=sistema;; esac
+# The managed index.html bypasses theme selection on static-file proxies. It is backed up above.
+if [ -e "$WEBROOT/index.html" ] || [ -L "$WEBROOT/index.html" ]; then rm -f "$WEBROOT/index.html"; fi
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=layout" -o "$BACKUP/layout-check.json"
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE"
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
 "$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null
 "$PHP_BIN" "$ROOT_DIR/installer/render-meta.php" "$WEBROOT"
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -o "$BACKUP/home-check.html"
-grep -q 'modern-vpscloud' "$BACKUP/home-check.html" || { echo 'O hotsite instalado não foi encontrado na resposta HTTP.' >&2; exit 1; }
+case "$SELECTED" in
+  layout-vpscloud-sistema|layout-vpscloud-whatsapp)
+    grep -q 'modern-vpscloud' "$BACKUP/home-check.html" || { echo 'O hotsite instalado não foi encontrado na resposta HTTP.' >&2; exit 1; };;
+  *)
+    curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsSL "$CHECK_URL/" -o "$BACKUP/native-check.html"
+    [ -s "$BACKUP/native-check.html" ] && ! grep -Eqi 'Fatal error|Uncaught Error|Arquivo .* nao existe' "$BACKUP/native-check.html" || { echo 'O tema nativo selecionado apresenta erro; instalação revertida.' >&2; exit 1; };;
+esac
 # The optional admin hook must never roll back a healthy public hotsite.
 if ! sh "$ROOT_DIR/installer/verify-admin.sh" "$CHECK_URL" "$BACKUP"; then
   echo 'Aviso: as opções extras de imagens não carregaram neste ambiente PHP.' >&2
