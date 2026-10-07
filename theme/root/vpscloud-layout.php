@@ -24,7 +24,18 @@ function vpscloud_set_visual_mode($db,$value) {
     $stmt->bind_param('s',$value);
     if(!$stmt->execute())throw new RuntimeException('Falha ao salvar preferência.');
 }
+function vpscloud_legacy_theme_table($db) {
+    $result=$db->query("SHOW FULL TABLES LIKE 'sis_hotsite'");
+    $row=$result?$result->fetch_row():null;
+    return $row && strtoupper($row[1])==='BASE TABLE';
+}
 function vpscloud_selected_layout($db) {
+    if (vpscloud_legacy_theme_table($db)) {
+        $result=$db->query('SELECT layout FROM sis_hotsite LIMIT 1');
+        $row=$result?$result->fetch_assoc():null;
+        if (!$row) throw new RuntimeException('Configuração nativa do hotsite indisponível.');
+        return $row['layout'];
+    }
     $result = $db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
     if (!$result) throw new RuntimeException('Não foi possível ler o layout do hotsite.');
     $row = $result->fetch_assoc();
@@ -40,6 +51,16 @@ function vpscloud_install_layout($current) {
 }
 function vpscloud_set_layout($db, $theme) {
     if (!isset(vpscloud_layouts()[$theme])) throw new RuntimeException('Layout VPS CLOUD inválido.');
+    vpscloud_write_native_layout($db, $theme);
+}
+function vpscloud_write_native_layout($db, $theme) {
+    if (vpscloud_legacy_theme_table($db)) {
+        $stmt=$db->prepare('UPDATE sis_hotsite SET layout=?');
+        if (!$stmt) throw new RuntimeException('Falha ao preparar tema nativo.');
+        $stmt->bind_param('s',$theme);
+        if (!$stmt->execute()) throw new RuntimeException('Falha ao salvar tema nativo.');
+        return;
+    }
     $result = $db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
     if (!$result) throw new RuntimeException('Não foi possível consultar o layout.');
     $stmt = $result->fetch_assoc()

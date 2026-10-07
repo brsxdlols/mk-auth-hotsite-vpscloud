@@ -9,7 +9,7 @@ try {
         $data = vpscloud_data($db);
         echo 'MK-Auth disponível: '.count($data['planos'])." planos visíveis.\n"; exit(0);
     }
-    $result = $db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
+    $result = $db->query(vpscloud_legacy_theme_table($db) ? 'SELECT layout AS valor FROM sis_hotsite LIMIT 1' : "SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
     if (!$result) throw new RuntimeException('Configuração de tema incompatível.');
     $row = $result->fetch_assoc();
     if (in_array('--read-theme', $argv, true)) { echo json_encode($row); exit(0); }
@@ -31,6 +31,11 @@ try {
     } elseif (!in_array('--select-theme', $argv, true)) throw new RuntimeException('Opção inválida.');
     $db->query('SET SESSION lock_wait_timeout=15');
     $db->query('SET SESSION innodb_lock_wait_timeout=15');
+    if (vpscloud_legacy_theme_table($db)) {
+        vpscloud_write_native_layout($db,$theme);
+        echo "Tema nativo atualizado.\n";
+        exit(0);
+    }
     $stmt = $row
         ? $db->prepare("UPDATE sis_opcao SET valor=? WHERE nome='layhotsite'")
         : $db->prepare("INSERT INTO sis_opcao (nome,valor) VALUES ('layhotsite',?)");

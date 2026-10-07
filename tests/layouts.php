@@ -4,6 +4,10 @@ require __DIR__.'/../theme/root/vpscloud-db.php';
 require __DIR__.'/../theme/root/vpscloud-layout.php';
 $db=vpscloud_db();
 $db->query('CREATE TEMPORARY TABLE sis_opcao(nome VARCHAR(64),valor VARCHAR(255))');
+if (vpscloud_legacy_theme_table($db)) {
+    if (!$db->query('CREATE TEMPORARY TABLE sis_hotsite(layout VARCHAR(255))')) throw new RuntimeException('Falha ao isolar teste do tema nativo.');
+    $db->query("INSERT INTO sis_hotsite(layout) VALUES('padrao')");
+}
 function verify($v,$s){if(!$v)throw new RuntimeException($s);echo 'PASS '.$s.PHP_EOL;}
 verify(count(vpscloud_layouts())===2,'apenas dois layouts');
 verify(vpscloud_visual_mode($db)==='dynamic','instalação nova dinâmica');
