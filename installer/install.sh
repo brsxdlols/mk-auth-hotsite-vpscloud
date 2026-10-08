@@ -22,6 +22,15 @@ done
 [ -s "$ROOT_DIR/theme/midias_vpscloud/js/modern-vpscloud.js" ]
 PRESERVE_THEME=0
 [ ! -d "$WEBROOT/layout/layout-vpscloud-sistema" ] || PRESERVE_THEME=1
+SHORTCUT_THEME=''
+if [ -L "$WEBROOT/index.html" ]; then
+  case "$(readlink "$WEBROOT/index.html")" in
+    layout/layout-vpscloud-sistema/index.html|"$WEBROOT"/layout/layout-vpscloud-sistema/index.html)
+      SHORTCUT_THEME=layout-vpscloud-sistema;;
+    layout/layout-vpscloud-whatsapp/index.html|"$WEBROOT"/layout/layout-vpscloud-whatsapp/index.html)
+      SHORTCUT_THEME=layout-vpscloud-whatsapp;;
+  esac
+fi
 "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --check
 BACKUP=$(mktemp -d /opt/mk-auth/backups/vpscloud-hotsite/XXXXXXXX 2>/dev/null) || {
   mkdir -p /opt/mk-auth/backups/vpscloud-hotsite
@@ -79,7 +88,10 @@ cp -a "$ROOT_DIR/theme/midias_vpscloud/." "$WEBROOT/midias_vpscloud/"
 find "$WEBROOT/layout/vpscloud" "$WEBROOT/layout/layout-vpscloud-whatsapp" "$WEBROOT/layout/layout-vpscloud-sistema" "$WEBROOT/midias_vpscloud" -type d -exec chmod 0755 {} \;
 find "$WEBROOT/layout/vpscloud" "$WEBROOT/layout/layout-vpscloud-whatsapp" "$WEBROOT/layout/layout-vpscloud-sistema" "$WEBROOT/midias_vpscloud" -type f -exec chmod 0644 {} \;
 install -m 0755 "$ROOT_DIR/installer/vpscloud-cadastro-modo" /usr/local/sbin/vpscloud-cadastro-modo
-if [ "$PRESERVE_THEME" = 1 ]; then
+if [ -n "$SHORTCUT_THEME" ]; then
+  echo "Migrando o layout exibido pelo atalho antigo para a seleção nativa: $SHORTCUT_THEME"
+  "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme --migrate-shortcut "$SHORTCUT_THEME"
+elif [ "$PRESERVE_THEME" = 1 ]; then
   "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme --preserve-theme
 else
   "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme

@@ -23,6 +23,11 @@ try {
     // An empty setting is not a theme choice (common after restoring a database).
     $theme = in_array('--preserve-theme', $argv, true) && trim((string)$previousTheme) !== ''
         ? $previousTheme : vpscloud_install_layout($previousTheme);
+    $shortcutArg = array_search('--migrate-shortcut', $argv, true);
+    if ($shortcutArg !== false && in_array('--select-theme', $argv, true)) {
+        $theme = $argv[$shortcutArg + 1] ?? '';
+        if (!isset(vpscloud_layouts()[$theme])) throw new RuntimeException('Layout do atalho antigo inválido.');
+    }
     if (in_array('--restore-theme', $argv, true)) {
         $previous = json_decode(file_get_contents($argv[count($argv)-1]), true);
         if (!$previous) {
