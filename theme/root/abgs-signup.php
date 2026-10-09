@@ -31,6 +31,9 @@ if ($last && time() - $last < 30) fail_signup('Aguarde alguns segundos antes de 
 
 require __DIR__.'/vpscloud-db.php';
 $LOADMYSQL = vpscloud_db();
+try { $allowedDueDays=vpscloud_due_days($LOADMYSQL); }
+catch (Throwable $e) { fail_signup('Não foi possível consultar os vencimentos. Tente novamente.',503); }
+if (!in_array($get('venc'),$allowedDueDays,true)) fail_signup('Data de vencimento indisponível. Atualize a página e escolha uma data habilitada.');
 $dryRun = PHP_SAPI === 'cli' && getenv('VPSCLOUD_SIGNUP_DRY_RUN') === '1';
 if ($dryRun) $LOADMYSQL->begin_transaction();
 $plan = $get('plano');

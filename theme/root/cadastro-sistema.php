@@ -1,3 +1,9 @@
+<?php
+header('Cache-Control: no-store');
+require_once __DIR__.'/vpscloud-db.php';
+$dueDays=[];
+try { $dueDays=vpscloud_due_days(vpscloud_db()); } catch (Throwable $e) { /* Do not offer unconfigured dates. */ }
+?>
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -18,7 +24,7 @@
       <aside class="summary"><small>Plano selecionado</small><h2 id="selected-plan">Carregando…</h2><p>Nossa equipe confirmará disponibilidade, cobertura e os detalhes da contratação.</p><button type="button" data-open-plan-picker aria-haspopup="dialog"><b>Trocar plano</b><span>→</span></button><a href="/central/"><b>Já sou cliente</b><span>→</span></a></aside>
       <form class="form" id="signup"><h2>Formulário de cadastro</h2><p>Preencha os campos identificados como (obrigatório).</p><div class="fields">
         <div class="form-section">Pagamento e plano</div>
-        <label>Data de vencimento <span class="required-label">(obrigatório)</span><select name="venc" required><option value="">Escolha uma data</option><option>05</option><option>10</option><option>15</option><option>20</option><option>25</option></select></label>
+        <label>Data de vencimento <span class="required-label">(obrigatório)</span><select name="venc" required><option value=""><?= $dueDays ? 'Escolha uma data' : 'Nenhuma data disponível. Entre em contato.' ?></option><?php foreach ($dueDays as $day): ?><option value="<?= $day ?>"><?= $day ?></option><?php endforeach; ?></select></label>
         <label>Plano selecionado <span class="required-label">(obrigatório)</span><input name="plano" id="plan-input" readonly><button type="button" data-open-plan-picker class="change-plan-inline" aria-haspopup="dialog">Escolher outro plano</button></label>
         <div class="form-section">Dados de acesso</div>
         <label>Login <span class="required-label">(obrigatório)</span><input name="login" required placeholder="Crie um login"></label><label>Senha <span class="required-label">(obrigatório)</span><input name="senha" type="password" required placeholder="Crie uma senha"></label>

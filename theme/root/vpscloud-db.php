@@ -23,6 +23,17 @@ function vpscloud_db() {
     }
     throw new RuntimeException('Não foi possível conectar ao banco local do MK-Auth.');
 }
+function vpscloud_due_days($db) {
+    $result=$db->query("SELECT nome,valor FROM sis_opcao WHERE nome REGEXP '^dia[0-9]{2}$'");
+    if (!$result) throw new RuntimeException('Não foi possível consultar os vencimentos.');
+    $days=[];
+    while ($row=$result->fetch_assoc()) {
+        $day=(int)substr($row['nome'],3);
+        if ($day>=1 && $day<=31 && strtolower(trim((string)$row['valor']))==='sim') $days[$day]=sprintf('%02d',$day);
+    }
+    ksort($days,SORT_NUMERIC);
+    return array_values($days);
+}
 function vpscloud_columns($db, $table) {
     $result = $db->query('SHOW COLUMNS FROM `'.$table.'`');
     if (!$result) throw new RuntimeException('Tabela necessária indisponível: '.$table);
