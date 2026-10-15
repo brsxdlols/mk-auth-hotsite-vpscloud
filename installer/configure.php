@@ -12,7 +12,13 @@ try {
     $result = $db->query(vpscloud_legacy_theme_table($db) ? 'SELECT layout AS valor FROM sis_hotsite LIMIT 1' : "SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
     if (!$result) throw new RuntimeException('Configuração de tema incompatível.');
     $row = $result->fetch_assoc();
-    if (in_array('--read-theme', $argv, true)) { echo json_encode($row); exit(0); }
+    if (in_array('--read-theme', $argv, true)) {
+        $option=$db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
+        if (!$option) throw new RuntimeException('Falha ao salvar preferência alternativa.');
+        $snapshot=$row ?: ['valor'=>''];
+        $snapshot['layhotsite']=$option->fetch_assoc();
+        echo json_encode($snapshot); exit(0);
+    }
     if (in_array('--theme-name', $argv, true)) { echo vpscloud_selected_layout($db); exit(0); }
     $previousTheme=$row['valor'] ?? '';
     $legacy=vpscloud_legacy_layouts();
@@ -38,16 +44,18 @@ try {
     } elseif (!in_array('--select-theme', $argv, true)) throw new RuntimeException('Opção inválida.');
     $db->query('SET SESSION lock_wait_timeout=15');
     $db->query('SET SESSION innodb_lock_wait_timeout=15');
-    if (vpscloud_legacy_theme_table($db)) {
-        vpscloud_write_native_layout($db,$theme);
-        echo "Tema nativo atualizado.\n";
-        exit(0);
+    vpscloud_write_native_layout($db,$theme);
+    if (isset($previous) && array_key_exists('layhotsite',$previous)) {
+        if ($previous['layhotsite'] === null) {
+            if (!$db->query("DELETE FROM sis_opcao WHERE nome='layhotsite'")) throw new RuntimeException('Falha ao restaurar preferência alternativa.');
+        } else {
+            $stmt=$db->prepare("UPDATE sis_opcao SET valor=? WHERE nome='layhotsite'");
+            if (!$stmt) throw new RuntimeException('Falha ao preparar restauração.');
+            $value=$previous['layhotsite']['valor'];
+            $stmt->bind_param('s',$value);
+            if (!$stmt->execute()) throw new RuntimeException('Falha ao restaurar preferência alternativa.');
+        }
+        vpscloud_clear_layout_cache();
     }
-    $stmt = $row
-        ? $db->prepare("UPDATE sis_opcao SET valor=? WHERE nome='layhotsite'")
-        : $db->prepare("INSERT INTO sis_opcao (nome,valor) VALUES ('layhotsite',?)");
-    if (!$stmt) throw new RuntimeException('Falha ao preparar seleção de tema.');
-    $stmt->bind_param('s', $theme);
-    if (!$stmt->execute()) throw new RuntimeException('Falha ao selecionar o tema.');
     echo "Tema atualizado.\n";
 } catch (Throwable $e) { fwrite(STDERR, $e->getMessage()."\n"); exit(1); }

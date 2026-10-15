@@ -51,7 +51,9 @@ Antes de ativar o tema, verifica pacote, PHP, conexão local, leitura dos planos
 - Logo relativa em `/mkfiles/logo.jpg` e contatos de cada provedor.
 - Erro de carregamento é diferente de ausência de planos.
 
-Requer PHP 7.3+ com mysqli no terminal e no servidor web, tabelas nativas acima e campos de nome/valor do plano. A seleção de tema usa `sis_opcao(nome,valor)`. Estruturas incompatíveis recebem erro explícito.
+Requer PHP 7.3+ com mysqli no terminal e no servidor web, tabelas nativas acima e campos de nome/valor do plano. A seleção de tema sincroniza `sis_hotsite.layout`, quando a tabela nativa existe, com `sis_opcao(nome,valor)` para instalações que ainda leem `layhotsite`. O cache nativo desse tema é invalidado ao salvar. Estruturas incompatíveis recebem erro explícito.
+
+O instalador corrige a permissão da pasta `layout` para 0755, permitindo a listagem dos temas pelo servidor web. O backup preserva a permissão anterior e as duas preferências de tema para restauração em caso de falha.
 
 O diretório padrão é `/var/www`. `VPSCLOUD_WEBROOT` permite um subdiretório de `/var/www`; `VPSCLOUD_CHECK_URL` deve apontar para a URL local que serve esse diretório. `VPSCLOUD_PHP` permite indicar outro executável PHP.
 

@@ -11,7 +11,12 @@ if (vpscloud_legacy_theme_table($db)) {
 function verify($v,$s){if(!$v)throw new RuntimeException($s);echo 'PASS '.$s.PHP_EOL;}
 verify(count(vpscloud_layouts())===2,'apenas dois layouts');
 verify(vpscloud_visual_mode($db)==='dynamic','instalação nova dinâmica');
-foreach(vpscloud_layouts() as $theme=>$mode){vpscloud_set_layout($db,$theme);verify(vpscloud_layout_mode($db)===$mode,'cadastro '.$mode);}
+foreach(vpscloud_layouts() as $theme=>$mode){
+    vpscloud_set_layout($db,$theme);
+    verify(vpscloud_layout_mode($db)===$mode,'cadastro '.$mode);
+    $option=$db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite'")->fetch_assoc();
+    verify($option && $option['valor']===$theme,'preferência alternativa sincronizada '.$mode);
+}
 foreach(vpscloud_visual_modes() as $name=>$visual){vpscloud_set_visual_mode($db,$visual);verify(vpscloud_visual_mode($db)===$visual,'imagem '.$name);}
 vpscloud_set_layout($db,'layout-vpscloud-sistema');
 verify(vpscloud_visual_mode($db)==='regulatory','tema e imagem independentes');

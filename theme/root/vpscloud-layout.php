@@ -59,7 +59,6 @@ function vpscloud_write_native_layout($db, $theme) {
         if (!$stmt) throw new RuntimeException('Falha ao preparar tema nativo.');
         $stmt->bind_param('s',$theme);
         if (!$stmt->execute()) throw new RuntimeException('Falha ao salvar tema nativo.');
-        return;
     }
     $result = $db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
     if (!$result) throw new RuntimeException('Não foi possível consultar o layout.');
@@ -69,6 +68,12 @@ function vpscloud_write_native_layout($db, $theme) {
     if (!$stmt) throw new RuntimeException('Não foi possível preparar a alteração do layout.');
     $stmt->bind_param('s', $theme);
     if (!$stmt->execute()) throw new RuntimeException('Não foi possível alterar o layout.');
+    vpscloud_clear_layout_cache();
+}
+function vpscloud_clear_layout_cache() {
+    // Native MK-Auth cache key for layhotsite; never clear unrelated caches.
+    $path='/opt/mk-auth/cache/xp/29a72e054faa62b0eb1309d1e8f0216ccaff106f';
+    if (file_exists($path) && !unlink($path)) throw new RuntimeException('Não foi possível invalidar o cache do tema.');
 }
 // CLI compatibility command; HTTP requests cannot change the setting.
 if (PHP_SAPI === 'cli' && realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {

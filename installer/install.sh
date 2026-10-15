@@ -37,6 +37,7 @@ BACKUP=$(mktemp -d /opt/mk-auth/backups/vpscloud-hotsite/XXXXXXXX 2>/dev/null) |
   BACKUP=$(mktemp -d /opt/mk-auth/backups/vpscloud-hotsite/XXXXXXXX)
 }
 chmod 0700 "$BACKUP"
+stat -c '%a' "$WEBROOT/layout" > "$BACKUP/layout-mode" 2>/dev/null || true
 "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --read-theme > "$BACKUP/theme.json"
 LAYOUTS=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --list-layouts)
 TARGETS=".htaccess index.html layout/vpscloud midias_vpscloud $ROOT_FILES"
@@ -60,6 +61,7 @@ rollback() {
     if [ -d "$BACKUP/legacy-layouts" ]; then cp -a "$BACKUP/legacy-layouts/." "$WEBROOT/layout/"; fi
     for target in $TARGETS; do rm -rf -- "$WEBROOT/$target"; done
     tar -C "$WEBROOT" -xzf "$BACKUP/files.tar.gz"
+    if [ -s "$BACKUP/layout-mode" ]; then chmod "$(cat "$BACKUP/layout-mode")" "$WEBROOT/layout"; fi
     "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --restore-theme "$BACKUP/theme.json" || echo 'Falha na restauração do tema; consulte o backup.' >&2
     if [ -e "$BACKUP/cadastro-modo" ]; then cp -a "$BACKUP/cadastro-modo" /usr/local/sbin/vpscloud-cadastro-modo; else rm -f /usr/local/sbin/vpscloud-cadastro-modo; fi
   fi
@@ -79,6 +81,7 @@ CHECK_URL=${VPSCLOUD_CHECK_URL:-http://127.0.0.1}
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=1" -o "$BACKUP/http-check.json"
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/http-check.json"
 install -d -m 0755 "$WEBROOT/layout" "$WEBROOT/layout/vpscloud" "$WEBROOT/midias_vpscloud"
+chmod 0755 "$WEBROOT/layout"
 cp -a "$ROOT_DIR/theme/layout/vpscloud/." "$WEBROOT/layout/vpscloud/"
 for layout in $LAYOUTS; do
   install -d -m 0755 "$WEBROOT/layout/$layout"
