@@ -13,7 +13,7 @@ for candidate in "${VPSCLOUD_PHP:-php}" /opt/php8/bin/php /usr/bin/php7.3; do
   if "$candidate" -r 'exit(PHP_VERSION_ID >= 70300 && extension_loaded("mysqli") ? 0 : 1);' >/dev/null 2>&1; then PHP_BIN=$candidate; break; fi
 done
 [ -n "$PHP_BIN" ] || { echo 'É necessário PHP 7.3+ com mysqli.' >&2; exit 1; }
-ROOT_FILES='vpscloud-favicon.php vpscloud-admin-layout.php vpscloud-home.php vpscloud-meta.php planos.php vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
+ROOT_FILES='vpscloud-site.php vpscloud-site-settings.php vpscloud-favicon.php vpscloud-admin-layout.php vpscloud-home.php vpscloud-meta.php planos.php vpscloud-db.php vpscloud-layout.php abgs-data.php abgs-visitor.php abgs-signup.php cadastro-whatsapp.hhvm cadastro-sistema.php vpscloud-config.php'
 for file in $ROOT_FILES; do
   [ -s "$ROOT_DIR/theme/root/$file" ] || { echo "Pacote incompleto: $file" >&2; exit 1; }
   "$PHP_BIN" -l "$ROOT_DIR/theme/root/$file" >/dev/null
@@ -113,10 +113,10 @@ curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-d
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
 "$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null
 "$PHP_BIN" "$ROOT_DIR/installer/render-meta.php" "$WEBROOT"
-curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -o "$BACKUP/home-check.html"
+curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -D "$BACKUP/home-headers.txt" -o "$BACKUP/home-check.html"
 case "$SELECTED" in
   layout-vpscloud-sistema|layout-vpscloud-whatsapp)
-    grep -q 'modern-vpscloud' "$BACKUP/home-check.html" || { echo 'O hotsite instalado não foi encontrado na resposta HTTP.' >&2; exit 1; };;
+    "$PHP_BIN" "$ROOT_DIR/installer/verify-site.php" "$WEBROOT" "$BACKUP/home-headers.txt" "$BACKUP/home-check.html";;
   *)
     curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsSL "$CHECK_URL/" -o "$BACKUP/native-check.html"
     [ -s "$BACKUP/native-check.html" ] && ! grep -Eqi 'Fatal error|Uncaught Error|Arquivo .* nao existe' "$BACKUP/native-check.html" || { echo 'O tema nativo selecionado apresenta erro; instalação revertida.' >&2; exit 1; };;

@@ -16,6 +16,8 @@ $rules.="\n# BEGIN VPSCLOUD LAYOUT\n<Files \"hotsite_layout.hhvm\">\nSetEnv PHP_
 if(file_put_contents($adminHt,$rules)===false)throw new RuntimeException('Falha ao integrar configurações.');
 $ht=$root.'/.htaccess';$content=is_file($ht)?file_get_contents($ht):'';
 $content=preg_replace('~# BEGIN VPSCLOUD META.*?# END VPSCLOUD META\\s*~s','',$content);
+$content=preg_replace('~# BEGIN VPSCLOUD SITE.*?# END VPSCLOUD SITE\\s*~s','',$content);
+$content="# BEGIN VPSCLOUD SITE\nRewriteEngine On\nRewriteRule ^(?:index\\.(?:hhvm|php|html))?$ vpscloud-site.php [END]\n# END VPSCLOUD SITE\n".$content;
 if(file_put_contents($ht,$content)===false)throw new RuntimeException('Falha ao preparar metadados.');
 foreach(array_merge(['vpscloud'=>null],vpscloud_legacy_layouts()) as $name=>$values){
  $path=$root.'/layout/'.$name;
