@@ -16,7 +16,7 @@ Toda instalação ou atualização ativa o VPS Cloud automaticamente. Se já est
 
 ### Site próprio / Apontamento
 
-Em **Hotsite → Layout**, escolha **Apontamento — site próprio** na própria lista **Tema**. Somente ao escolher essa opção aparece o campo de endereço. Preencha e clique em **Salvar apontamento**. A página inicial do domínio do MK-Auth e o atalho **Hotsite Provedor** da tela de login (que abre essa página inicial) redirecionam para o destino configurado. Painel administrativo e Central do Assinante continuam acessíveis.
+Em **Hotsite → Layout**, escolha **Apontamento — site próprio** na própria lista **Tema**. Clique em **Gravar** para salvar essa escolha; só então aparece o campo de endereço. Preencha e clique em **Salvar apontamento**. A página inicial do domínio do MK-Auth e o atalho **Hotsite Provedor** da tela de login (que abre essa página inicial) redirecionam para o destino configurado. Painel administrativo e Central do Assinante continuam acessíveis.
 
 Aceita `marthconect.com.br`, `www.marthconect.com.br`, `https://marthconect.com.br` e `http://marthconect.com.br`. Um domínio sem protocolo usa HTTPS; `www`, protocolo explícito, caminho e parâmetros são preservados. O destino não pode conter credenciais nem usar o próprio domínio do MK-Auth. O redirecionamento usa HTTP 302 sem cache permanente.
 

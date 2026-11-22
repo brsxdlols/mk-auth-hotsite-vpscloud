@@ -9,9 +9,12 @@ checkSite(vpscloud_site_same_host('https://MK-AUTH.example.org/path','mk-auth.ex
 $db=vpscloud_db();
 if(!$db->query('CREATE TEMPORARY TABLE sis_opcao(nome VARCHAR(64),valor TEXT)'))throw new RuntimeException('Falha ao isolar teste.');
 checkSite(vpscloud_site_target($db)==='','padrão sem apontamento');
+vpscloud_site_select($db,'external');
+checkSite(vpscloud_site_mode($db)==='external' && vpscloud_site_target($db)==='','selecionar apontamento sem redirecionar antes do endereço');
 vpscloud_site_save($db,'marthconect.com.br','mk-auth.example.org');
 checkSite(vpscloud_site_target($db)==='https://marthconect.com.br','apontamento salvo');
 $failed=false;try{vpscloud_site_save($db,'https://mk-auth.example.org','mk-auth.example.org');}catch(RuntimeException $e){$failed=true;}
 checkSite($failed && vpscloud_site_target($db)==='https://marthconect.com.br','loop recusado preserva preferência');
 vpscloud_site_save($db,'','mk-auth.example.org');
 checkSite(vpscloud_site_target($db)==='','voltar ao hotsite local');
+checkSite(vpscloud_site_mode($db)==='local','modo local restaurado');

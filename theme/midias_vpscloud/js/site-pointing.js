@@ -8,43 +8,43 @@
   const notice = document.createElement('p');
   notice.setAttribute('role', 'status');
   nativeForm.appendChild(notice);
-  let active = panel.dataset.activeTarget === '1';
+  let savedMode = panel.dataset.savedMode;
   let submitting = false;
   function refresh() {
     const pointing = select.value === '__vpscloud_pointing__';
-    panel.hidden = !pointing;
-    for (const button of nativeForm.querySelectorAll('button[type="submit"],button:not([type]),input[type="submit"]')) {
-      button.hidden = pointing;
-    }
+    panel.hidden = !pointing || savedMode !== 'external';
     const images = document.getElementById('vpscloud-image-settings');
     if (images) images.hidden = !['layout-vpscloud-sistema', 'layout-vpscloud-whatsapp'].includes(select.value);
   }
   select.addEventListener('change', refresh);
   nativeForm.addEventListener('submit', async function (event) {
-    if (select.value === '__vpscloud_pointing__') {
-      event.preventDefault();
-      panel.querySelector('[name="site_url"]').focus();
-      return;
-    }
-    if (!active || submitting) return;
+    const pointing = select.value === '__vpscloud_pointing__';
+    if (!pointing && (savedMode !== 'external' || submitting)) return;
     event.preventDefault();
-    notice.textContent = 'Desativando apontamento para salvar o tema escolhido…';
+    event.stopImmediatePropagation();
+    if (submitting) return;
+    submitting = true;
+    notice.textContent = 'Salvando escolha do site…';
     try {
+      const mode = pointing ? 'external' : 'local';
       const data = new FormData(pointingForm);
-      data.set('site_mode', 'local');
+      data.delete('vpscloud_site_save');
+      data.set('vpscloud_site_select', '1');
+      data.set('site_mode', mode);
       const response = await fetch(pointingForm.action, {method: 'POST', body: data, credentials: 'same-origin', cache: 'no-store'});
       const html = new DOMParser().parseFromString(await response.text(), 'text/html');
       const result = html.getElementById('vpscloud-site-settings');
-      if (!response.ok || !result || result.dataset.activeTarget !== '0') {
-        throw new Error('Não foi possível desativar o apontamento. Atualize a página e confira sua sessão.');
+      if (!response.ok || !result || result.dataset.savedMode !== mode) {
+        throw new Error('Não foi possível salvar. Atualize a página e confira sua sessão.');
       }
-      active = false;
-      submitting = true;
-      if (typeof nativeForm.requestSubmit === 'function') nativeForm.requestSubmit();
+      savedMode = mode;
+      if (pointing) window.location.reload();
+      else if (typeof nativeForm.requestSubmit === 'function') nativeForm.requestSubmit();
       else nativeForm.submit();
     } catch (error) {
+      submitting = false;
       notice.textContent = error.message;
     }
-  });
+  }, true);
   refresh();
 }());

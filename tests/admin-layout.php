@@ -7,9 +7,10 @@ $_SERVER['SCRIPT_FILENAME']='/opt/mk-auth/admin/hotsite_layout.hhvm';
 session_id('vpscloud-integration-test');
 $case=$argv[1]??'form';
 if($case==='csrf'){$_SERVER['REQUEST_METHOD']='POST';$_POST=['vpscloud_visual_save'=>'1','csrf'=>'invalid','visual_mode'=>'network'];}
-if(in_array($case,['site','site-invalid','site-csrf'],true)){
+if(in_array($case,['site','site-invalid','site-csrf','site-select'],true)){
  $_SERVER['REQUEST_METHOD']='POST';$_SERVER['HTTP_HOST']='mk-auth.example.org';
  $_POST=['vpscloud_site_save'=>'1','csrf'=>$case==='site-csrf'?'invalid':hash('sha256','vpscloud-visual|'.session_id()),'site_mode'=>'external','site_url'=>$case==='site-invalid'?'javascript:alert(1)':'marthconect.com.br'];
+ if($case==='site-select'){unset($_POST['vpscloud_site_save']);$_POST['vpscloud_site_select']='1';unset($_POST['site_url']);}
 }
 ob_start();
 require __DIR__.'/../theme/root/vpscloud-admin-layout.php';
@@ -22,6 +23,9 @@ if($case!=='denied'){
  if(strpos($html,'data-vpscloud-theme')===false || strpos($html,'value="__vpscloud_pointing__"')===false)exit(5);
  if($case==='form' && !preg_match('~id="vpscloud-site-settings"[^>]* hidden~',$html))exit(6);
  if($case==='site' && strpos($html,'value="__vpscloud_pointing__" selected')===false)exit(7);
+ if(strpos($html,'#vpscloud-site-settings[hidden],#vpscloud-image-settings[hidden]{display:none!important}')===false)exit(8);
+ if(strpos($html,'placeholder="marthconect')!==false)exit(9);
+ if($case==='site-select' && (vpscloud_site_mode($LOADMYSQL)!=='external' || vpscloud_site_target($LOADMYSQL)!==''))exit(10);
 }
 if(in_array($case,['site','site-invalid','site-csrf'],true)){
  $expected=$case==='site'?'https://marthconect.com.br':'';

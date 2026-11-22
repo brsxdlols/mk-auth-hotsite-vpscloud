@@ -17,17 +17,32 @@ function vpscloud_site_same_host($url,$host) {
     $origin=parse_url('http://'.$host,PHP_URL_HOST);
     return $origin && strcasecmp(rtrim((string)parse_url($url,PHP_URL_HOST),'.'),rtrim($origin,'.'))===0;
 }
-function vpscloud_site_target($db) {
+function vpscloud_site_value($db) {
     $result=$db->query("SELECT valor FROM sis_opcao WHERE nome='vpscloud_external_site' LIMIT 1");
     if (!$result) throw new RuntimeException('Não foi possível consultar o apontamento.');
     $row=$result->fetch_assoc();
-    return vpscloud_site_url($row['valor'] ?? '');
+    return $row['valor'] ?? '';
+}
+function vpscloud_site_mode($db) {
+    return vpscloud_site_value($db)===''?'local':'external';
+}
+function vpscloud_site_target($db) {
+    $value=vpscloud_site_value($db);
+    return $value==='__pending__'?'':vpscloud_site_url($value);
+}
+function vpscloud_site_select($db,$mode) {
+    if (!in_array($mode,['local','external'],true)) throw new RuntimeException('Escolha o tipo de hotsite.');
+    if ($mode==='local') vpscloud_site_store($db,'');
+    elseif (vpscloud_site_value($db)==='') vpscloud_site_store($db,'__pending__');
 }
 function vpscloud_site_save($db,$value,$host='') {
     $value=vpscloud_site_url($value);
     if ($value!=='' && vpscloud_site_same_host($value,$host)) {
         throw new RuntimeException('Informe o domínio do site próprio, diferente do domínio deste MK-Auth.');
     }
+    vpscloud_site_store($db,$value);
+}
+function vpscloud_site_store($db,$value) {
     $result=$db->query("SELECT valor FROM sis_opcao WHERE nome='vpscloud_external_site' LIMIT 1");
     if (!$result) throw new RuntimeException('Não foi possível consultar o apontamento.');
     $stmt=$result->fetch_assoc()
