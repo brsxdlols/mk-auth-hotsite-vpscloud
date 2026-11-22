@@ -22,7 +22,11 @@ function setup(active,success=true){
  let prevented=false;await state.handlers.submit({preventDefault(){prevented=true;}});
  assert(prevented && state.field.focused && !state.posted());
  state.select.value='padrao';state.handlers.change();
- assert(state.panel.hidden && !state.buttons[0].hidden && !state.images.hidden);
+ assert(state.panel.hidden && !state.buttons[0].hidden && state.images.hidden);
+ for(const theme of ['layout-vpscloud-sistema','layout-vpscloud-whatsapp']){
+  state.select.value=theme;state.handlers.change();assert(!state.images.hidden && state.panel.hidden);
+ }
+ state.select.value='novo_hotsite';state.handlers.change();assert(state.images.hidden);
  state=setup(true);state.select.value='padrao';
  await state.handlers.submit({preventDefault(){}});
  assert(state.posted().options.body.site_mode==='local' && state.form.submitted);

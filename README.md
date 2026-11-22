@@ -79,6 +79,7 @@ Os testes usam tabelas temporárias restritas à conexão de teste, sem modifica
 
 Em Hotsite > Layout há somente dois temas VPS Cloud:
 layout-vpscloud-sistema e layout-vpscloud-whatsapp.
+O painel Imagens dos planos aparece somente quando um desses dois temas está selecionado; fica oculto para Apontamento e para os demais temas.
 Abaixo do formulário nativo, o campo Imagens dos planos permite escolher
 Dinâmico ou uma categoria fixa. Use Salvar imagens para gravar essa preferência.
 A primeira instalação usa Dinâmico; atualizações preservam a preferência.

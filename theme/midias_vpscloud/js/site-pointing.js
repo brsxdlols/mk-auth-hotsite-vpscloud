@@ -17,7 +17,7 @@
       button.hidden = pointing;
     }
     const images = document.getElementById('vpscloud-image-settings');
-    if (images) images.hidden = pointing;
+    if (images) images.hidden = !['layout-vpscloud-sistema', 'layout-vpscloud-whatsapp'].includes(select.value);
   }
   select.addEventListener('change', refresh);
   nativeForm.addEventListener('submit', async function (event) {
