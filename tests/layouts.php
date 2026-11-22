@@ -10,6 +10,10 @@ if (vpscloud_legacy_theme_table($db)) {
 }
 function verify($v,$s){if(!$v)throw new RuntimeException($s);echo 'PASS '.$s.PHP_EOL;}
 verify(count(vpscloud_layouts())===2,'apenas dois layouts');
+foreach(['','padrao','original','ABGS_econ03_blue'] as $oldTheme){
+    verify(vpscloud_install_layout($oldTheme)==='layout-vpscloud-sistema','instalador ativa VPS Cloud a partir de '.$oldTheme);
+}
+verify(vpscloud_install_layout('layout-vpscloud-whatsapp')==='layout-vpscloud-whatsapp','atualização mantém cadastro WhatsApp');
 verify(vpscloud_visual_mode($db)==='dynamic','instalação nova dinâmica');
 foreach(vpscloud_layouts() as $theme=>$mode){
     vpscloud_set_layout($db,$theme);

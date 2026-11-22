@@ -10,7 +10,7 @@ Execute como root:
 curl -fsSL https://raw.githubusercontent.com/brsxdlols/mk-auth-hotsite-vpscloud/main/install.sh | sh
 ```
 
-Instalações novas e migrações do antigo tema `vpscloud` selecionam **layout-vpscloud-sistema**. Atualizações preservam uma escolha já feita entre os dois novos layouts.
+Toda instalação ou atualização ativa o VPS Cloud automaticamente. Se já estiver selecionado um dos dois layouts VPS Cloud, seu modo de cadastro é mantido; nos demais casos, é selecionado **layout-vpscloud-sistema**. Depois da instalação, uma troca manual em **Hotsite → Layout** continua permitida e vale até a próxima execução do instalador. **Central → Layout** altera apenas a Central do Assinante, não o site público.
 
 ## Escolha do cadastro dentro do MK-Auth
 

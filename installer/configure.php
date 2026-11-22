@@ -26,9 +26,8 @@ try {
         vpscloud_set_visual_mode($db,$legacy[$previousTheme][1]);
         $previousTheme='layout-vpscloud-'.$legacy[$previousTheme][0];
     }
-    // An empty setting is not a theme choice (common after restoring a database).
-    $theme = in_array('--preserve-theme', $argv, true) && trim((string)$previousTheme) !== ''
-        ? $previousTheme : vpscloud_install_layout($previousTheme);
+    // Every install/update activates VPS Cloud; later native changes remain free.
+    $theme = vpscloud_install_layout($previousTheme);
     $shortcutArg = array_search('--migrate-shortcut', $argv, true);
     if ($shortcutArg !== false && in_array('--select-theme', $argv, true)) {
         $theme = $argv[$shortcutArg + 1] ?? '';

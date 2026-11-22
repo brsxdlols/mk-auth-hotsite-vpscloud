@@ -20,8 +20,6 @@ for file in $ROOT_FILES; do
 done
 [ -s "$ROOT_DIR/theme/layout/vpscloud/index.html" ]
 [ -s "$ROOT_DIR/theme/midias_vpscloud/js/modern-vpscloud.js" ]
-PRESERVE_THEME=0
-[ ! -d "$WEBROOT/layout/layout-vpscloud-sistema" ] || PRESERVE_THEME=1
 SHORTCUT_THEME=''
 if [ -L "$WEBROOT/index.html" ]; then
   case "$(readlink "$WEBROOT/index.html")" in
@@ -94,8 +92,6 @@ install -m 0755 "$ROOT_DIR/installer/vpscloud-cadastro-modo" /usr/local/sbin/vps
 if [ -n "$SHORTCUT_THEME" ]; then
   echo "Migrando o layout exibido pelo atalho antigo para a seleção nativa: $SHORTCUT_THEME"
   "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme --migrate-shortcut "$SHORTCUT_THEME"
-elif [ "$PRESERVE_THEME" = 1 ]; then
-  "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme --preserve-theme
 else
   "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme
 fi
