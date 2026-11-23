@@ -20,15 +20,6 @@ for file in $ROOT_FILES; do
 done
 [ -s "$ROOT_DIR/theme/layout/vpscloud/index.html" ]
 [ -s "$ROOT_DIR/theme/midias_vpscloud/js/modern-vpscloud.js" ]
-SHORTCUT_THEME=''
-if [ -L "$WEBROOT/index.html" ]; then
-  case "$(readlink "$WEBROOT/index.html")" in
-    layout/layout-vpscloud-sistema/index.html|"$WEBROOT"/layout/layout-vpscloud-sistema/index.html)
-      SHORTCUT_THEME=layout-vpscloud-sistema;;
-    layout/layout-vpscloud-whatsapp/index.html|"$WEBROOT"/layout/layout-vpscloud-whatsapp/index.html)
-      SHORTCUT_THEME=layout-vpscloud-whatsapp;;
-  esac
-fi
 "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --check
 BACKUP=$(mktemp -d /opt/mk-auth/backups/vpscloud-hotsite/XXXXXXXX 2>/dev/null) || {
   mkdir -p /opt/mk-auth/backups/vpscloud-hotsite
@@ -94,12 +85,7 @@ cp -a "$ROOT_DIR/theme/midias_vpscloud/." "$WEBROOT/midias_vpscloud/"
 find "$WEBROOT/layout/vpscloud" "$WEBROOT/layout/layout-vpscloud-whatsapp" "$WEBROOT/layout/layout-vpscloud-sistema" "$WEBROOT/midias_vpscloud" -type d -exec chmod 0755 {} \;
 find "$WEBROOT/layout/vpscloud" "$WEBROOT/layout/layout-vpscloud-whatsapp" "$WEBROOT/layout/layout-vpscloud-sistema" "$WEBROOT/midias_vpscloud" -type f -exec chmod 0644 {} \;
 install -m 0755 "$ROOT_DIR/installer/vpscloud-cadastro-modo" /usr/local/sbin/vpscloud-cadastro-modo
-if [ -n "$SHORTCUT_THEME" ]; then
-  echo "Migrando o layout exibido pelo atalho antigo para a seleção nativa: $SHORTCUT_THEME"
-  "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme --migrate-shortcut "$SHORTCUT_THEME"
-else
-  "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme
-fi
+"$PHP_BIN" "$ROOT_DIR/installer/configure.php" --select-theme
 SELECTED=$("$PHP_BIN" "$ROOT_DIR/installer/configure.php" --theme-name)
 case "$SELECTED" in layout-vpscloud-whatsapp|layout-vpscloud-whatsapp-*) MODE=whatsapp;; *) MODE=sistema;; esac
 # Remove only the shortcut installed by previous VPS Cloud releases.
@@ -114,7 +100,10 @@ if [ -L "$WEBROOT/index.html" ]; then
   esac
 fi
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=layout" -o "$BACKUP/layout-check.json"
-"$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE"
+case "$SELECTED" in
+  layout-vpscloud-sistema|layout-vpscloud-whatsapp) "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE";;
+  *) "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json";;
+esac
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
 sh "$ROOT_DIR/installer/integrate-apache.sh" "$WEBROOT" "$BACKUP"
 "$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null

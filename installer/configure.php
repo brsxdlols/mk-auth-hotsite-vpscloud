@@ -2,6 +2,7 @@
 if (PHP_SAPI !== 'cli' || (function_exists('posix_geteuid') && posix_geteuid() !== 0)) { fwrite(STDERR, "Execute como root.\n"); exit(1); }
 require __DIR__.'/../theme/root/vpscloud-db.php';
 require __DIR__.'/../theme/root/vpscloud-layout.php';
+require __DIR__.'/../theme/root/vpscloud-site-settings.php';
 try {
     if (in_array('--list-layouts', $argv, true)) { echo implode(' ', array_keys(vpscloud_layouts())); exit(0); }
     $db = vpscloud_db();
@@ -21,17 +22,12 @@ try {
     }
     if (in_array('--theme-name', $argv, true)) { echo vpscloud_selected_layout($db); exit(0); }
     $previousTheme=$row['valor'] ?? '';
-    $legacy=vpscloud_legacy_layouts();
-    if (in_array('--select-theme',$argv,true) && isset($legacy[$previousTheme])) {
-        vpscloud_set_visual_mode($db,$legacy[$previousTheme][1]);
-        $previousTheme='layout-vpscloud-'.$legacy[$previousTheme][0];
-    }
-    // Every install/update activates VPS Cloud; later native changes remain free.
+    // Only the two native defaults opt into VPS Cloud automatically.
     $theme = vpscloud_install_layout($previousTheme);
-    $shortcutArg = array_search('--migrate-shortcut', $argv, true);
-    if ($shortcutArg !== false && in_array('--select-theme', $argv, true)) {
-        $theme = $argv[$shortcutArg + 1] ?? '';
-        if (!isset(vpscloud_layouts()[$theme])) throw new RuntimeException('Layout do atalho antigo inválido.');
+    if (in_array('--select-theme',$argv,true)
+        && ($theme===$previousTheme || vpscloud_site_mode($db)==='external')) {
+        echo "Tema existente preservado.\n";
+        exit(0);
     }
     if (in_array('--restore-theme', $argv, true)) {
         $previous = json_decode(file_get_contents($argv[count($argv)-1]), true);

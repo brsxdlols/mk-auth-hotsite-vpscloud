@@ -47,7 +47,7 @@ function vpscloud_layout_mode($db, $legacy = 'sistema') {
     return $layouts[$selected] ?? ($legacy === 'whatsapp' ? 'whatsapp' : 'sistema');
 }
 function vpscloud_install_layout($current) {
-    return isset(vpscloud_layouts()[$current]) ? $current : 'layout-vpscloud-sistema';
+    return in_array($current,['padrao','padrao_antigo'],true) ? 'layout-vpscloud-whatsapp' : $current;
 }
 function vpscloud_set_layout($db, $theme) {
     if (!isset(vpscloud_layouts()[$theme])) throw new RuntimeException('Layout VPS CLOUD inválido.');

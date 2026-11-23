@@ -19,7 +19,9 @@ $content=preg_replace('~# BEGIN VPSCLOUD META.*?# END VPSCLOUD META\\s*~s','',$c
 $content=preg_replace('~# BEGIN VPSCLOUD SITE.*?# END VPSCLOUD SITE\\s*~s','',$content);
 $content="# BEGIN VPSCLOUD SITE\nRewriteEngine On\nRewriteRule ^(?:index\\.(?:hhvm|php|html))?$ vpscloud-site.php [END]\n# END VPSCLOUD SITE\n".$content;
 if(file_put_contents($ht,$content)===false)throw new RuntimeException('Falha ao preparar metadados.');
+$activeLayout=vpscloud_selected_layout(vpscloud_db());
 foreach(array_merge(['vpscloud'=>null],vpscloud_legacy_layouts()) as $name=>$values){
+ if($name===$activeLayout)continue;
  $path=$root.'/layout/'.$name;
  if(!file_exists($path))continue;
  if(is_link($path)||realpath(dirname($path))!==$root.'/layout')throw new RuntimeException('Layout antigo fora do diretório esperado.');
