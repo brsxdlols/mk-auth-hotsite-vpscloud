@@ -61,6 +61,11 @@ rollback() {
     tar -C "$WEBROOT" -xzf "$BACKUP/files.tar.gz"
     if [ -s "$BACKUP/layout-mode" ]; then chmod "$(cat "$BACKUP/layout-mode")" "$WEBROOT/layout"; fi
     "$PHP_BIN" "$ROOT_DIR/installer/configure.php" --restore-theme "$BACKUP/theme.json" || echo 'Falha na restauração do tema; consulte o backup.' >&2
+    if [ -e "$BACKUP/apache-site-changed" ]; then
+      rm -f /etc/apache2/conf-enabled/vpscloud-hotsite.conf
+      if [ -e "$BACKUP/apache-site.conf" ] || [ -L "$BACKUP/apache-site.conf" ]; then cp -a "$BACKUP/apache-site.conf" /etc/apache2/conf-enabled/vpscloud-hotsite.conf; fi
+      apache2ctl configtest && apache2ctl graceful || echo 'Falha ao restaurar integração Apache; consulte o backup.' >&2
+    fi
     if [ -e "$BACKUP/cadastro-modo" ]; then cp -a "$BACKUP/cadastro-modo" /usr/local/sbin/vpscloud-cadastro-modo; else rm -f /usr/local/sbin/vpscloud-cadastro-modo; fi
   fi
   exit "$code"
@@ -111,6 +116,7 @@ fi
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "${CHECK_URL%/}/abgs-data.php?vpscloud-check=layout" -o "$BACKUP/layout-check.json"
 "$PHP_BIN" "$ROOT_DIR/installer/verify-data.php" "$BACKUP/layout-check.json" "$MODE"
 "$PHP_BIN" "$ROOT_DIR/installer/integrate-layout.php" "$WEBROOT" "$BACKUP"
+sh "$ROOT_DIR/installer/integrate-apache.sh" "$WEBROOT" "$BACKUP"
 "$PHP_BIN" -l /opt/mk-auth/admin/hotsite_layout.hhvm >/dev/null
 "$PHP_BIN" "$ROOT_DIR/installer/render-meta.php" "$WEBROOT"
 curl --noproxy '*' --connect-timeout 5 --max-time 20 -fsS "$CHECK_URL/" -D "$BACKUP/home-headers.txt" -o "$BACKUP/home-check.html"

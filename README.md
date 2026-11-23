@@ -20,6 +20,8 @@ Em **Hotsite → Layout**, escolha **Apontamento — site próprio** na própria
 
 Aceita `marthconect.com.br`, `www.marthconect.com.br`, `https://marthconect.com.br` e `http://marthconect.com.br`. Um domínio sem protocolo usa HTTPS; `www`, protocolo explícito, caminho e parâmetros são preservados. O destino não pode conter credenciais nem usar o próprio domínio do MK-Auth. O redirecionamento usa HTTP 302 sem cache permanente.
 
+O instalador integra a rota inicial ao Apache em HTTP e HTTPS, inclusive quando o virtual host HTTPS ignora `.htaccess`. A configuração gerenciada fica em `/etc/apache2/conf-enabled/vpscloud-hotsite.conf`, com backup, teste de sintaxe e restauração em caso de falha.
+
 Para desativar, escolha outro tema na lista **Tema** e grave normalmente. Atualizações preservam o apontamento configurado. Instalações novas começam sem apontamento.
 
 ### Layout do cadastro
