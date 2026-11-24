@@ -32,9 +32,11 @@ function vpscloud_legacy_theme_table($db) {
 function vpscloud_selected_layout($db) {
     if (vpscloud_legacy_theme_table($db)) {
         $result=$db->query('SELECT layout FROM sis_hotsite LIMIT 1');
-        $row=$result?$result->fetch_assoc():null;
-        if (!$row) throw new RuntimeException('Configuração nativa do hotsite indisponível.');
-        return $row['layout'];
+        if (!$result) throw new RuntimeException('Não foi possível consultar a configuração nativa do hotsite.');
+        $row=$result->fetch_assoc();
+        if ($row) return $row['layout'];
+        // Upgraded databases may keep an empty legacy table while the native
+        // dispatcher reads layhotsite from sis_opcao. Do not invent a row.
     }
     $result = $db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
     if (!$result) throw new RuntimeException('Não foi possível ler o layout do hotsite.');
@@ -47,7 +49,7 @@ function vpscloud_layout_mode($db, $legacy = 'sistema') {
     return $layouts[$selected] ?? ($legacy === 'whatsapp' ? 'whatsapp' : 'sistema');
 }
 function vpscloud_install_layout($current) {
-    return in_array($current,['padrao','padrao_antigo'],true) ? 'layout-vpscloud-whatsapp' : $current;
+    return in_array($current,['padrao','padrao_antigo','ABGS_econ03_blue'],true) ? 'layout-vpscloud-whatsapp' : $current;
 }
 function vpscloud_set_layout($db, $theme) {
     if (!isset(vpscloud_layouts()[$theme])) throw new RuntimeException('Layout VPS CLOUD inválido.');

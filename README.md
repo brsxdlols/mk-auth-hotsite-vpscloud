@@ -10,7 +10,7 @@ Execute como root:
 curl -fsSL https://raw.githubusercontent.com/brsxdlols/mk-auth-hotsite-vpscloud/main/install.sh | sh
 ```
 
-Instalações e atualizações selecionam **layout-vpscloud-whatsapp** automaticamente apenas quando o tema atual é exatamente `padrao` ou `padrao_antigo`. Qualquer outra seleção é preservada, incluindo temas próprios do cliente, temas VPS Cloud, nomes antigos e seleção vazia. Apontamentos ativos também são preservados. **Central → Layout** altera apenas a Central do Assinante, não o site público.
+Instalações e atualizações selecionam **layout-vpscloud-whatsapp** automaticamente apenas quando o tema atual é exatamente `padrao`, `padrao_antigo` ou `ABGS_econ03_blue` (antigo tema VPS Cloud). Qualquer outra seleção é preservada, incluindo temas próprios do cliente, temas VPS Cloud, nomes antigos e seleção vazia. Apontamentos ativos também são preservados. **Central → Layout** altera apenas a Central do Assinante, não o site público.
 
 ## Escolha do cadastro dentro do MK-Auth
 
@@ -100,3 +100,5 @@ O instalador inclui a configuração abaixo da tela nativa, preservando sua aute
 O título HTML e os metadados de compartilhamento são preenchidos no servidor
 com o nome em Dados do Provedor. Pré-visualizações já armazenadas pelos aplicativos
 podem permanecer antigas até a atualização do cache desses aplicativos.
+
+Quando a tabela antiga `sis_hotsite` existe sem registros, a leitura do tema usa `sis_opcao.layhotsite`, sem criar registros artificiais na tabela antiga.

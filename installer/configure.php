@@ -13,6 +13,11 @@ try {
     $result = $db->query(vpscloud_legacy_theme_table($db) ? 'SELECT layout AS valor FROM sis_hotsite LIMIT 1' : "SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
     if (!$result) throw new RuntimeException('Configuração de tema incompatível.');
     $row = $result->fetch_assoc();
+    if (!$row && vpscloud_legacy_theme_table($db)) {
+        $result=$db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
+        if (!$result) throw new RuntimeException('Não foi possível consultar a preferência de tema.');
+        $row=$result->fetch_assoc();
+    }
     if (in_array('--read-theme', $argv, true)) {
         $option=$db->query("SELECT valor FROM sis_opcao WHERE nome='layhotsite' LIMIT 1");
         if (!$option) throw new RuntimeException('Falha ao salvar preferência alternativa.');
@@ -22,7 +27,7 @@ try {
     }
     if (in_array('--theme-name', $argv, true)) { echo vpscloud_selected_layout($db); exit(0); }
     $previousTheme=$row['valor'] ?? '';
-    // Only the two native defaults opt into VPS Cloud automatically.
+    // Only the native defaults and our original ABGS theme migrate automatically.
     $theme = vpscloud_install_layout($previousTheme);
     if (in_array('--select-theme',$argv,true)
         && ($theme===$previousTheme || vpscloud_site_mode($db)==='external')) {
